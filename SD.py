@@ -1,5 +1,6 @@
 import shutil
 import os
+from FFMPEG_Handler import FFMPEG_Handler as fmpg
 
 class SD(object):
     def __init__(self, camera, card):
@@ -17,6 +18,7 @@ class SD(object):
     def copy_video(self, export_directory, take_number, location):
         i = 1
         for file_object in self.files:
+            info = fmpg(file_object)
             full_origin = os.path.join(self.path, file_object)
             print "Copying File {!s} of {!s}".format(i, len(self.files))
             full_destination = os.path.join(export_directory, "{!s}_{!s}_{!s}_{!s}".format(self.camera, 'Take_' + str(take_number), location, file_object))

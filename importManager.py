@@ -84,8 +84,9 @@ class ImportManager(object):
     def export_csvs(self):
         # Master
         with open('{!s}/{!s}.csv'.format(self.output_path, self.location), 'a') as master_file:
-            master_file.write("{!s}, {!s}, {!s}, {!s}\n".format('Take ' + str(self.take_count), self.location, self.time, self.camera_rig))
-            master_file.write("FILE NAME, ORIGIN CAMERA, ORIGIN SD, NOTES\n")
+            if not self.more:
+                master_file.write("{!s}, {!s}, {!s}, {!s}\n".format('Take ' + str(self.take_count), self.location, self.time, self.camera_rig))
+                master_file.write("FILE NAME, ORIGIN CAMERA, ORIGIN SD, NOTES\n")
             for sd in self.sd_list:
                 for video_file in sd.files:
                     master_file.write("{!s}, {!s}, {!s}, {!s}\n".format(sd.camera + '_Take_' + str(self.take_count) + '_' + self.location + '_' + video_file, sd.camera, sd.name, sd.notes))
