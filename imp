@@ -6,6 +6,7 @@ from importManager import *
 parser = argparse.ArgumentParser(description="imp360 requires the SD card numbers in order of their corresponding camera number as input. All SD cards must be connected prior to running")
 parser.add_argument('Card Numbers', metavar='N', type=int, nargs='+', help='Card Numbers in Camera Order')
 args = vars(parser.parse_args())
-print '\nFinch 360 Camera SD Import Manager'
+os.system('echo Go, SD Importer, Go! | cowsay | lolcat')
 cards = args['Card Numbers']
+q = raw_input('Press Any Key...')
 ImportManager(cards)

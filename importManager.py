@@ -2,6 +2,7 @@ import time
 import os
 import pickle
 from SD import *
+from threading import Thread
 
 
 class ImportManager(object):
@@ -21,6 +22,9 @@ class ImportManager(object):
         if self.user_input != '':
             self.output_path = self.user_input
         self.user_input = ''
+        self.user_input = raw_input('Camera Rig:\nENTER to continue with {!s}\n'.format(self.camera_rig))
+        if self.user_input != '':
+            self.camera_rig = self.user_input
         # create SD card objects
         self.sd_list = []
         for i, card in enumerate(cards):
@@ -38,8 +42,8 @@ class ImportManager(object):
         self.create_export_directory()
         for sd in self.sd_list:
             print "Copying from {!s}".format(sd.name)
-            sd.copy_video(self.export_directory)
-        self.export_txt()
+            sd.copy_video(self.export_directory)      # THREAD THIS!
+        self.export_csvs()
         print "Copying Complete!\n"
         print "Shoot Location: {!s}".format(self.location)
         print "Shoot Number: {!s}".format(self.dump_count)
@@ -59,6 +63,7 @@ class ImportManager(object):
         pickle.dump(self.location, file_object)
         pickle.dump(self.output_path, file_object)
         pickle.dump(self.dump_count, file_object)
+        pickle.dump(self.camera_rig, file_object)
         file_object.close()
 
     def load_config(self):
@@ -66,11 +71,21 @@ class ImportManager(object):
         self.location = pickle.load(file_object)
         self.output_path = pickle.load(file_object)
         self.dump_count = pickle.load(file_object)
+        self.camera_rig = pickle.load(file_object)
         file_object.close()
 
-    def export_txt(self):
+    def export_csvs(self):
+        # Master
+        with open('{!s}/{!s}.csv'.format(self.output_path, self.location), 'a') as master_file:
+            master_file.write("{!s}, {!s}, {!s}, {!s}\n".format('Take ' + str(self.dump_count), self.location, self.time, self.camera_rig))
+            master_file.write("FILE NAME, ORIGIN CAMERA, ORIGIN SD, NOTES\n")
+            for sd in self.sd_list:
+                for video_file in sd.files:
+                    master_file.write("{!s}, {!s}, {!s}, {!s}\n".format(sd.camera + '_' + video_file, sd.camera, sd.name, sd.notes))
+        master_file.close()
+        # Specific
         with open('{!s}/{!s}_{!s}.csv'.format(self.export_directory, self.location, self.dump_count), 'wb') as file_object:
-            file_object.write("{!s}, {!s}, {!s}\n".format(self.location, self.time, 'Data Dump '+ str(self.dump_count)))
+            file_object.write("{!s}, {!s}, {!s}, {!s}\n".format(self.location, self.time, 'Shoot Number ' + str(self.dump_count), self.camera_rig))
             file_object.write("FILE NAME, ORIGIN CAMERA, ORIGIN SD, NOTES\n")
             for sd in self.sd_list:
                 for video_file in sd.files:
