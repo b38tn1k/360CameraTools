@@ -91,7 +91,7 @@ class ImportManager(object):
                     master_file.write("{!s}, {!s}, {!s}, {!s}\n".format(sd.camera + '_Take_' + str(self.take_count) + '_' + self.location + '_' + video_file, sd.camera, sd.name, sd.notes))
         master_file.close()
         # Specific
-        with open('{!s}/{!s}_{!s}.csv'.format(self.export_directory, self.location, self.take_count), 'a') as file_object:
+        with open('{!s}/{!s}_{!s}.csv'.format(self.export_directory, self.location, 'Take_' + str(self.take_count)), 'a') as file_object:
             if not self.more:
                 file_object.write("{!s}, {!s}, {!s}, {!s}\n".format(self.location, self.time, 'Shoot Number ' + str(self.take_count), self.camera_rig))
                 file_object.write("FILE NAME, ORIGIN CAMERA, ORIGIN SD, NOTES\n")
