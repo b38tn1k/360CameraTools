@@ -14,11 +14,11 @@ class SD(object):
             if '.MP4' in file_object.upper():
                 self.files.append(file_object)
 
-    def copy_video(self, export_directory):
+    def copy_video(self, export_directory, take_number, location):
         i = 1
         for file_object in self.files:
             full_origin = os.path.join(self.path, file_object)
             print "Copying File {!s} of {!s}".format(i, len(self.files))
-            full_destination = os.path.join(export_directory, "{!s}_{!s}".format(self.camera, file_object))
+            full_destination = os.path.join(export_directory, "{!s}_{!s}_{!s}_{!s}".format(self.camera, 'Take_' + str(take_number), location, file_object))
             shutil.copyfile(full_origin, full_destination)
             i += 1

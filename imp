@@ -5,8 +5,13 @@ from importManager import *
 
 parser = argparse.ArgumentParser(description="imp360 requires the SD card numbers in order of their corresponding camera number as input. All SD cards must be connected prior to running")
 parser.add_argument('Card Numbers', metavar='N', type=int, nargs='+', help='Card Numbers in Camera Order')
+parser.add_argument('-m', '--more', help='Append More Cards to the last Data Dump and Take', dest='more', action='store_true', required=False)
+
 args = vars(parser.parse_args())
 os.system('echo Go, SD Importer, Go! | cowsay | lolcat')
 cards = args['Card Numbers']
+more = False
+if args['more']:
+    more = True
 q = raw_input('Press Any Key...')
-ImportManager(cards)
+ImportManager(cards, more)
