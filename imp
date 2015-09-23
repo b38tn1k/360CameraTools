@@ -3,7 +3,7 @@ import argparse
 from importManager import *
 
 
-parser = argparse.ArgumentParser(description="imp360 requires the SD card numbers in order of their corresponding camera number as input. All SD cards must be connected prior to running")
+parser = argparse.ArgumentParser(description="imp360 requires the SD card numbers in order of their corresponding camera number as input. Ensure SD Cards are connected prior to running. If you command't connect all SD cards in one go, use the -m flag to add more cameras to the same data dump in subsequent sessions. Always work from Cam_1, Cam_2, Cam_3, ..., Cam_N")
 parser.add_argument('Card Numbers', metavar='N', type=int, nargs='+', help='Card Numbers in Camera Order')
 parser.add_argument('-m', '--more', help='Append More Cards to the last Data Dump and Take', dest='more', action='store_true', required=False)
 
