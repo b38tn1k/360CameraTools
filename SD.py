@@ -2,6 +2,7 @@ import shutil
 import os
 import hashlib
 from VideoFile import *
+import sys
 
 class SD(object):
     def __init__(self, camera, card):
@@ -30,6 +31,8 @@ class SD(object):
             checksum2 = self.md5(full_destination)
             if checksum2 != checksum:
                 print "Error Copying {!s} to {!s}".format(file_object.path, full_destination)
+                sys.stdout.write('\a')
+                sys.stdout.flush()
             i += 1
 
     def md5(self, fname):

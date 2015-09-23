@@ -32,6 +32,7 @@ class VideoFile(object):
         # print 'Bitrate: \t' + self.bitrate
         # print 'Frame Rate: \t' + self.frame_rate
 
-# fh = FFMPEG_Handler('Old_Pittwater_Road_Take_1/Cam_4_Take_1_Old_Pittwater_Road_GOPR9999.MP4')
-# fh.analyse()
-# fh.digest_infos()
+    def concat(self, other_videos):
+        for video in other_videos:
+            pass
+            new_video = '''this is where I concat'''
