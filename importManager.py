@@ -55,7 +55,7 @@ class ImportManager(object):
         for sd in self.sd_list:
             print "Camera: {!s}\tCard: {!s}\tNotes: {!s}".format(sd.camera, sd.name, sd.notes)
             for video_file in sd.files:
-                print "File: {!s}".format(video_file)
+                print "File: {!s}".format(video_file.name)
         self.save_config()
 
     def create_export_directory(self):
@@ -85,18 +85,18 @@ class ImportManager(object):
         # Master
         with open('{!s}/{!s}.csv'.format(self.output_path, self.location), 'a') as master_file:
             if not self.more:
-                master_file.write("{!s}, {!s}, {!s}, {!s}\n".format('Take ' + str(self.take_count), self.location, self.time, self.camera_rig))
-                master_file.write("FILE NAME, ORIGIN CAMERA, ORIGIN SD, NOTES\n")
+                master_file.write("Take: {!s}, Location: {!s}, Time: {!s}, Rig: {!s}\n".format(str(self.take_count), self.location, self.time, self.camera_rig))
+                master_file.write("FILE NAME, ORIGIN CAMERA, ORIGIN SD, CREATION TIME, DURATION, FRAME RATE, BITRATE, NOTES\n")
             for sd in self.sd_list:
                 for video_file in sd.files:
-                    master_file.write("{!s}, {!s}, {!s}, {!s}\n".format(sd.camera + '_Take_' + str(self.take_count) + '_' + self.location + '_' + video_file, sd.camera, sd.name, sd.notes))
+                    master_file.write("{!s}, {!s}, {!s}, {!s}, {!s}, {!s}, {!s}, {!s}\n".format(sd.camera + '_Take_' + str(self.take_count) + '_' + self.location + '_' + video_file.name, sd.camera, sd.name, video_file.creation_time, video_file.duration, video_file.frame_rate, video_file.bitrate, sd.notes))
         master_file.close()
         # Specific
         with open('{!s}/{!s}_{!s}.csv'.format(self.export_directory, self.location, 'Take_' + str(self.take_count)), 'a') as file_object:
             if not self.more:
                 file_object.write("{!s}, {!s}, {!s}, {!s}\n".format(self.location, self.time, 'Shoot Number ' + str(self.take_count), self.camera_rig))
-                file_object.write("FILE NAME, ORIGIN CAMERA, ORIGIN SD, NOTES\n")
+                file_object.write("FILE NAME, ORIGIN CAMERA, ORIGIN SD, CREATION TIME, DURATION, FRAME RATE, BITRATE, NOTES\n")
             for sd in self.sd_list:
                 for video_file in sd.files:
-                    file_object.write("{!s}, {!s}, {!s}, {!s}\n".format(sd.camera + '_' + video_file, sd.camera, sd.name, sd.notes))
+                    file_object.write("{!s}, {!s}, {!s}, {!s}, {!s}, {!s}, {!s}, {!s}\n".format(sd.camera + '_Take_' + str(self.take_count) + '_' + self.location + '_' + video_file.name, sd.camera, sd.name, video_file.creation_time, video_file.duration, video_file.frame_rate, video_file.bitrate, sd.notes))
         file_object.close()
