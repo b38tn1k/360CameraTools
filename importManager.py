@@ -65,7 +65,7 @@ class ImportManager(object):
         print "Shoot Number: {!s}".format(self.take_count)
         print "Time: {!s}".format(self.time)
         for sd in self.sd_list:
-            print "Camera: {!s}\tCard: {!s}\tNotes: {!s}".format(sd.camera, sd.name, sd.notes)
+            print "Camera: {!s}\tCard: {!s}\tNotes: {!s}\n".format(sd.camera, sd.name, sd.notes)
             for video_file in sd.files:
                 print "File: {!s}".format(video_file.name)
                 print "Duration: {!s}\nCreation Time: {!s}\nFrame Rate: {!s}\tBitrate: {!s}\nResolution: {!s}\n".format(video_file.duration, video_file.creation_time, video_file.frame_rate, video_file.bitrate, video_file.resolution)
@@ -116,3 +116,8 @@ class ImportManager(object):
                 for video_file in sd.files:
                     file_object.write("{!s}, {!s}, {!s}, {!s}, {!s}, {!s}, {!s}, {!s}\n".format(sd.camera + '_Take_' + str(self.take_count) + '_' + self.location + '_' + video_file.name, sd.camera, sd.name, video_file.creation_time, video_file.duration, video_file.frame_rate, video_file.bitrate, video_file.resolution, sd.notes))
         file_object.close()
+
+# Forward Facing Camera Marked
+# Concatenation via ffmpeg
+# STATE/LOCATION/SHOOT_DAY/CAMERA/ROLL
+# CAMERA = RIG (for VR stuff)

@@ -1,0 +1,90 @@
+#!/usr/bin/env python
+import sys
+#import xml but lazy
+import pickle
+import os
+
+def is_number(s):
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
+
+def ordered_set(dups):
+    ordered_set = []
+    added = []
+    for val in dups:
+        if not val in added:
+            ordered_set.append(val)
+        added.append(val)
+    return ordered_set
+
+def find_max(ordered, x):
+    return max(ordered, key=lambda entry: entry[x])
+
+output_directory = os.path.abspath(sys.argv[1])
+output_directory = output_directory[:-len(sys.argv[1])]
+print "Working with XML at " + output_directory
+
+if sys.argv[1] == '-h':
+    print 'feed me an xml from pluraleyes and I will turn it into a audio chart!'
+    exit()
+rough_result = []
+with open(sys.argv[1], 'r') as f:
+    f_lines = f.readlines()
+    for line in f_lines:
+        for search_term in ['name', 'start']:
+            if search_term in line:
+                entry = line.find('<{}>'.format(search_term) ) + len(search_term) + 2
+                exit = line.find('</{}>'.format(search_term) )
+                rough_result.append(line[entry:exit])
+    f.close()
+duplicates = []
+for i, result in enumerate(rough_result):
+    if is_number(result):
+        duplicates.append([rough_result[i-1], result])
+ordered = ordered_set(duplicates)
+max_lag = int(find_max(ordered, 1)[1])
+inverted = []
+for value in ordered:
+    inverted.append([value[0], max_lag - int(value[1])])
+#
+# with open('importHelperConfig', 'r')as file_object:
+#     location = pickle.load(file_object)
+#     output_path = pickle.load(file_object)
+#     take_count = pickle.load(file_object)
+#     camera_rig = pickle.load(file_object)
+#     start_camera = pickle.load(file_object)
+#     file_object.close()
+
+with open(os.path.join(output_directory, 'AudioSync.csv'), 'wb') as f:
+    f.write('\nFCP Order Frame Offset\n')
+    print '\nFCP Order Frame Offset'
+    for camera in ordered:
+        print camera
+        f.write(camera[0] + ',' + str(camera[1]) + '\n')
+    f.write('\nInverted Frame Offset\n')
+    print '\nInverted Frame Offset'
+    for camera in inverted:
+        print camera
+        f.write(camera[0] + ',' + str(camera[1]) + '\n')
+    f.close()
+
+
+
+
+# full_output = os.path.join(output_path, location + '_Take_' + str(take_count))
+# with open(os.path.join(full_output, '{}_Take_{}_Audio_Sync.csv'.format(location, take_count)), 'wb') as f:
+    # f.write(location+ ',Take ' + str(take_count) + ',' + camera_rig + '\n')
+    # print (location+ ',Take ' + str(take_count) + ',' + camera_rig + '\n')
+    # f.write('FILE, FRAME OFFSET' + '\n')
+    # print ('FILE, FRAME OFFSET' + '\n')
+    # for value in ordered:
+    #     f.write(value[0] + ',' + str(value[1]) + '\n')
+    #     print (value[0] + ',' + str(value[1]) + '\n')
+    # f.write('FILE, INVERTED FRAME OFFSET' + '\n')
+    # print ('FILE, INVERTED FRAME OFFSET' + '\n')
+    # for value in inverted:
+    #     f.write(value[0] + ',' + str(value[1]) + '\n')
+    #     print (value[0] + ',' + str(value[1]) + '\n')
