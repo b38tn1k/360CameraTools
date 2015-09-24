@@ -2,7 +2,7 @@ import time
 import os
 import pickle
 from SD import *
-from threading import Thread
+from threading import Thread, activeCount
 
 
 class ImportManager(object):
@@ -44,9 +44,21 @@ class ImportManager(object):
         # Output
         self.export_directory = ''
         self.create_export_directory()
+        sd_counter = 0
+        start_time = time.time()
         for sd in self.sd_list:
             print "Copying from {!s}".format(sd.name)
-            sd.copy_video(self.export_directory, self.take_count, self.location)
+            #sd.copy_video(self.export_directory, self.take_count, self.location) # THREAD THIS!!!
+            sd_counter += 1
+            t = Thread(target=sd.copy_video, args =[self.export_directory, self.take_count, self.location]).start() # THREAD THIS!!!
+            #Limit the number of concurrent threads
+            while activeCount() >= 3:
+                time.sleep(1)
+                print("Waiting for active copy threads to finish. On sd #{}, with {} active threads, it has been {} seconds".format(sd_counter, activeCount(), time.time()-start_time))
+        while(activeCount() > 1):
+            time.sleep(1)
+            print("Waiting for active copy threads to finish. On sd #{}, with {} active threads, it has been {} seconds".format(sd_counter, activeCount(), time.time()-start_time))
+
         self.export_csvs()
         print "Copying Complete!\n"
         print "Shoot Location: {!s}".format(self.location)
@@ -57,10 +69,13 @@ class ImportManager(object):
             for video_file in sd.files:
                 print "File: {!s}".format(video_file.name)
         self.save_config()
+        for sd in self.sd_list:
+            os.system('diskutil umountDisk {!s}'.format(sd.name))
 
     def create_export_directory(self):
         self.export_directory = os.path.join(self.output_path, self.location + '_Take_' + str(self.take_count))
-        if not self.more:
+        #if not self.more:
+        if not self.more and not os.path.exists(self.export_directory):
             os.mkdir(self.export_directory)
 
     def save_config(self):
