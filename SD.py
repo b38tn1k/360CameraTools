@@ -30,7 +30,7 @@ class SD(object):
             shutil.copyfile(file_object.path, full_destination)
             checksum2 = self.md5(full_destination)
             if checksum2 != checksum:
-                print "Error Copying {!s} to {!s}".format(file_object.path, full_destination)
+                print '\033[91m'+"\nError Copying {!s} to {!s}\n".format(file_object.path, full_destination)+'\033[0m'
                 sys.stdout.write('\a')
                 sys.stdout.flush()
             i += 1

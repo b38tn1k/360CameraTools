@@ -27,10 +27,13 @@ class VideoFile(object):
         self.bitrate = self.infos[index+len('bitrate: '):index+len('bitrate: ')+len('60158 kb/s')]
         index = self.infos.find(' fps')
         self.frame_rate = str(int(self.infos[index-3:index]))
+        index = self.infos.find(' [SAR')
+        self.resolution = self.infos[index-len('1920x1440'):index]
         # print 'Created: \t' + self.creation_time
         # print 'Duration: \t' + self.duration
         # print 'Bitrate: \t' + self.bitrate
         # print 'Frame Rate: \t' + self.frame_rate
+        # print 'Resolution: \t' + self.resolution
 
     def concat(self, other_videos):
         for video in other_videos:

@@ -53,11 +53,11 @@ class ImportManager(object):
             t = Thread(target=sd.copy_video, args =[self.export_directory, self.take_count, self.location]).start() # THREAD THIS!!!
             #Limit the number of concurrent threads
             while activeCount() >= 3:
-                time.sleep(1)
-                print("Waiting for active copy threads to finish. On sd #{}, with {} active threads, it has been {} seconds".format(sd_counter, activeCount(), time.time()-start_time))
+                time.sleep(10)
+                print('\033[94m'+"Waiting for active copy threads to finish. On sd #{}, with {} active threads, it has been {} seconds".format(sd_counter, activeCount(), time.time()-start_time) + '\033[0m')
         while(activeCount() > 1):
-            time.sleep(1)
-            print("Waiting for active copy threads to finish. On sd #{}, with {} active threads, it has been {} seconds".format(sd_counter, activeCount(), time.time()-start_time))
+            time.sleep(10)
+            print('\033[94m'+"Waiting for active copy threads to finish. On sd #{}, with {} active threads, it has been {} seconds".format(sd_counter, activeCount(), time.time()-start_time) + '\033[0m')
 
         self.export_csvs()
         print "Copying Complete!\n"
@@ -68,6 +68,7 @@ class ImportManager(object):
             print "Camera: {!s}\tCard: {!s}\tNotes: {!s}".format(sd.camera, sd.name, sd.notes)
             for video_file in sd.files:
                 print "File: {!s}".format(video_file.name)
+                print "Duration: {!s}\nCreation Time: {!s}\nFrame Rate: {!s}\tBitrate: {!s}\nResolution: {!s}\n".format(video_file.duration, video_file.creation_time, video_file.frame_rate, video_file.bitrate, video_file.resolution)
         self.save_config()
         for sd in self.sd_list:
             os.system('diskutil umountDisk {!s}'.format(sd.name))
@@ -101,17 +102,17 @@ class ImportManager(object):
         with open('{!s}/{!s}.csv'.format(self.output_path, self.location), 'a') as master_file:
             if not self.more:
                 master_file.write("Take: {!s}, Location: {!s}, Time: {!s}, Rig: {!s}\n".format(str(self.take_count), self.location, self.time, self.camera_rig))
-                master_file.write("FILE NAME, ORIGIN CAMERA, ORIGIN SD, CREATION TIME, DURATION, FRAME RATE, BITRATE, NOTES\n")
+                master_file.write("FILE NAME, ORIGIN CAMERA, ORIGIN SD, CREATION TIME, DURATION, FRAME RATE, BITRATE, RESOLUTION, NOTES\n")
             for sd in self.sd_list:
                 for video_file in sd.files:
-                    master_file.write("{!s}, {!s}, {!s}, {!s}, {!s}, {!s}, {!s}, {!s}\n".format(sd.camera + '_Take_' + str(self.take_count) + '_' + self.location + '_' + video_file.name, sd.camera, sd.name, video_file.creation_time, video_file.duration, video_file.frame_rate, video_file.bitrate, sd.notes))
+                    master_file.write("{!s}, {!s}, {!s}, {!s}, {!s}, {!s}, {!s}, {!s}\n".format(sd.camera + '_Take_' + str(self.take_count) + '_' + self.location + '_' + video_file.name, sd.camera, sd.name, video_file.creation_time, video_file.duration, video_file.frame_rate, video_file.bitrate, video_file.resolution, sd.notes))
         master_file.close()
         # Specific
         with open('{!s}/{!s}_{!s}.csv'.format(self.export_directory, self.location, 'Take_' + str(self.take_count)), 'a') as file_object:
             if not self.more:
                 file_object.write("{!s}, {!s}, {!s}, {!s}\n".format(self.location, self.time, 'Shoot Number ' + str(self.take_count), self.camera_rig))
-                file_object.write("FILE NAME, ORIGIN CAMERA, ORIGIN SD, CREATION TIME, DURATION, FRAME RATE, BITRATE, NOTES\n")
+                file_object.write("FILE NAME, ORIGIN CAMERA, ORIGIN SD, CREATION TIME, DURATION, FRAME RATE, BITRATE, RESOLUTION, NOTES\n")
             for sd in self.sd_list:
                 for video_file in sd.files:
-                    file_object.write("{!s}, {!s}, {!s}, {!s}, {!s}, {!s}, {!s}, {!s}\n".format(sd.camera + '_Take_' + str(self.take_count) + '_' + self.location + '_' + video_file.name, sd.camera, sd.name, video_file.creation_time, video_file.duration, video_file.frame_rate, video_file.bitrate, sd.notes))
+                    file_object.write("{!s}, {!s}, {!s}, {!s}, {!s}, {!s}, {!s}, {!s}\n".format(sd.camera + '_Take_' + str(self.take_count) + '_' + self.location + '_' + video_file.name, sd.camera, sd.name, video_file.creation_time, video_file.duration, video_file.frame_rate, video_file.bitrate, video_file.resolution, sd.notes))
         file_object.close()
