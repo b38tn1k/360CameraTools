@@ -18,9 +18,6 @@ class SD(object):
                 full_origin = os.path.join(self.path, file_object)
                 self.files.append(VideoFile(file_object, full_origin))
 
-                # USE VIDEO CLASS ABOVE AND ADD ALL THE INFORMATION
-                # MOVING TOWARDS AN APPEND METHOD
-
     def copy_video(self, export_directory, take_number, location):
         i = 1
         for file_object in self.files:

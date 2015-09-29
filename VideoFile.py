@@ -26,7 +26,7 @@ class VideoFile(object):
         index = self.infos.find('bitrate: ')
         self.bitrate = self.infos[index+len('bitrate: '):index+len('bitrate: ')+len('60158 kb/s')]
         index = self.infos.find(' fps')
-        self.frame_rate = str(int(self.infos[index-3:index]))
+        self.frame_rate = self.infos[index-5:index]
         index = self.infos.find(' [SAR')
         self.resolution = self.infos[index-len('1920x1440'):index]
         # print 'Created: \t' + self.creation_time

@@ -21,9 +21,10 @@ def ordered_set(dups):
     return ordered_set
 
 def find_max(ordered, x):
-    return max(ordered, key=lambda entry: entry[x])
+    return max(ordered, key=lambda entry: int(entry[x]))
 
 output_directory = os.path.abspath(sys.argv[1])
+print output_directory
 output_directory = output_directory[:-len(sys.argv[1])]
 print "Working with XML at " + output_directory
 
