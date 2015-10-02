@@ -25,14 +25,15 @@ path = os.getcwd()
 files = os.listdir(path)
 
 # Convert into transport stream (file level transcode)
-# for video in files:
-#     if '.MP4' in video.upper():
-#         short_name = video.strip('.MP4')
-#         short_name = short_name.strip('.mp4')  # not sure. dum
-#         os.system('ffmpeg -i {!s}.MP4 -c copy -bsf:v h264_mp4toannexb -f mpegts {!s}.ts'.format(short_name, short_name))
-#         time.sleep(10)
+for video in files:
+    if '.MP4' in video.upper():
+        short_name = video.strip('.MP4')
+        short_name = short_name.strip('.mp4')  # not sure. dum
+        os.system('ffmpeg -i {!s}.MP4 -c copy -bsf:v h264_mp4toannexb -f mpegts {!s}.ts'.format(short_name, short_name))
+        time.sleep(10)
 
 # Concat the transport streams and output as an mp4
+one_really_long_command = ''
 for video in files:
     if '.ts' in video and 'GOPR' in video:    # this is not case sensitive ergo shit
         short_name = video.strip('.ts')
@@ -41,8 +42,16 @@ for video in files:
             if ts.cam in child and ts.event in child and '.ts' in child and not video in child: #bad james
                 ts.add_child(child)
         command = build_concat_command(ts.children)
-        print command
+        # print command
         # subprocess.call(command)
         # subprocess.wait()
         # time.sleep(1)
+
+        #WORST/BEST IDEA EVER!!!!
+        one_really_long_command += command + '&&'
+one_really_long_command += 'say complete'
+
+os.system(one_really_long_command)
+
+
 print '\n'
