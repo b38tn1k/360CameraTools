@@ -1,6 +1,7 @@
 import os
 import time
 from gopro_file_friend import *
+import subprocess
 
 #lossless mp4 concat script
 #BASED PURELY ON THE BELIEF THAT LISTS TAKEDN FROM DIRECTORIES WILL ALWAYS BE IN ALPHANUMERIC ORDER CAUSE ...
@@ -39,6 +40,9 @@ for video in files:
         for child in files:
             if ts.cam in child and ts.event in child and '.ts' in child and not video in child: #bad james
                 ts.add_child(child)
-        # os.system(build_concat_command(ts.children))
-        print build_concat_command(ts.children)
-        time.sleep(10)
+        command = build_concat_command(ts.children)
+        print command
+        # subprocess.call(command)
+        # subprocess.wait()
+        # time.sleep(1)
+print '\n'
