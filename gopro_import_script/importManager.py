@@ -19,6 +19,13 @@ class ImportManager(object):
             self.import_count += 1
             self.start_camera = 0
         self.user_input = ''
+        # create SD card objects
+        self.sd_list = []
+        for i, card in enumerate(cards):
+            self.sd_list.append(SD(i + self.start_camera, card))
+        self.start_camera = len(self.sd_list)
+
+    def run(self):  # Juast delet this line if it fails... I also copied the SD card object creation but up a bit
         # Collect new information
         self.user_input = raw_input('Shoot location:\nENTER to continue with {!s}\n'.format(self.location))
         if self.user_input != '':
@@ -33,11 +40,6 @@ class ImportManager(object):
         self.user_input = raw_input('Camera Rig:\nENTER to continue with {!s}\n'.format(self.camera_rig))
         if self.user_input != '':
             self.camera_rig = self.user_input
-        # create SD card objects
-        self.sd_list = []
-        for i, card in enumerate(cards):
-            self.sd_list.append(SD(i + self.start_camera, card))
-        self.start_camera = len(self.sd_list)
         # grab any Notes
         while self.user_input != "x":
             for sd in self.sd_list:
