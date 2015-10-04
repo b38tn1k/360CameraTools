@@ -32,6 +32,7 @@ for video in files:
         os.system('ffmpeg -i {!s}.MP4 -c copy -bsf:v h264_mp4toannexb -f mpegts {!s}.ts'.format(short_name, short_name))
         time.sleep(10)
 
+files = os.listdir(path)
 # Concat the transport streams and output as an mp4
 one_really_long_command = ''
 for video in files:
