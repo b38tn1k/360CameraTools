@@ -15,4 +15,3 @@ if args['more']:
     more = True
 q = raw_input('\033[93m'+'Press Any Key...'+'\033[0m')
 ImportManager(cards, more)
-ImportManager.run()

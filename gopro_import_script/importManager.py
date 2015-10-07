@@ -24,8 +24,6 @@ class ImportManager(object):
         for i, card in enumerate(cards):
             self.sd_list.append(SD(i + self.start_camera, card))
         self.start_camera = len(self.sd_list)
-
-    def run(self):  # Juast delet this line if it fails... I also copied the SD card object creation but up a bit
         # Collect new information
         self.user_input = raw_input('Shoot location:\nENTER to continue with {!s}\n'.format(self.location))
         if self.user_input != '':

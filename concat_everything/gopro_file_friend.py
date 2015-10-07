@@ -4,7 +4,7 @@ class GoProFriend(object):
     def __init__(self, head_file):
         self.head_file = head_file
         self.cam = head_file[:5]
-        self.event = head_file[-7:-2].strip('ts')
+        self.event = head_file[-7:-1].strip('.ts')
         self.children = [self.head_file]
 
     def add_child(self, child):

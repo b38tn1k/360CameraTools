@@ -18,17 +18,19 @@ def build_concat_command(_list):
     outpur_str = _list[0].strip('.ts') + '_concat'
     for child in _list[1:]:
         inner_str += '|' + child
-    command = 'ffmpeg -i "concat:{!s}" -c copy -bsf:a aac_adtstoasc {!s}.mp4'.format(inner_str, outpur_str)
+    command = 'ffmpeg -i "concat:{!s}" -c copy -bsf:a aac_adtstoasc concat/{!s}.mp4'.format(inner_str, outpur_str)
     return command
 
 path = os.getcwd()
 files = os.listdir(path)
+print_list(files)
 
 # Convert into transport stream (file level transcode)
 for video in files:
     if '.MP4' in video.upper():
-        short_name = video.strip('.MP4')
-        short_name = short_name.strip('.mp4')  # not sure. dum
+        short_name = video[:-4]
+        # short_name = short_name.strip('.mp4')  # removes all trailing 4's? dum
+        print short_name
         os.system('ffmpeg -i {!s}.MP4 -c copy -bsf:v h264_mp4toannexb -f mpegts {!s}.ts'.format(short_name, short_name))
         time.sleep(10)
 
@@ -50,9 +52,7 @@ for video in files:
 
         #WORST/BEST IDEA EVER!!!!
         one_really_long_command += command + '&&'
-one_really_long_command += 'say complete'
+os.mkdir('concat')
+one_really_long_command += 'say complete && rm *.ts'
 
 os.system(one_really_long_command)
-
-
-print '\n'
