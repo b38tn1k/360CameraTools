@@ -12,6 +12,7 @@ class ImportManager(object):
         # self.import_count = 1
         # self.camera_rig = '11 Cam Drone Rig'
         # self.start_camera = 0
+
         self.load_config()
         self.more = more
         self.time = time.strftime("%a %d %b %Y %H:%M", time.localtime())
@@ -19,6 +20,21 @@ class ImportManager(object):
             self.import_count += 1
             self.start_camera = 0
         self.user_input = ''
+
+        # more hacks...
+        for card_name in cards:
+            new_sd = True
+            for card_id in self.sd_history:
+                if card_name == card_id[0]:
+                    card_id[1] += 1
+                    print 'Card {!s} has been used {!s} times'.format(card_id[0], card_id[1])
+                    new_sd = False
+            if new_sd:
+                self.sd_history.append([card_name, 0])
+
+
+        # /more hacks...
+
         # create SD card objects
         self.sd_list = []
         for i, card in enumerate(cards):
@@ -95,6 +111,7 @@ class ImportManager(object):
         pickle.dump(self.import_count, file_object)
         pickle.dump(self.camera_rig, file_object)
         pickle.dump(self.start_camera, file_object)
+        pickle.dump(self.sd_history, file_object)
         file_object.close()
 
     def load_config(self):
@@ -104,6 +121,7 @@ class ImportManager(object):
         self.import_count = pickle.load(file_object)
         self.camera_rig = pickle.load(file_object)
         self.start_camera = pickle.load(file_object)
+        self.sd_history = pickle.load(file_object)
         file_object.close()
 
     def export_csvs(self):
