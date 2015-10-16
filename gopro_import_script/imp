@@ -8,7 +8,7 @@ import shutil
 import hashlib
 from threading import Thread, activeCount
 import subprocess as sp
-from Tkinter import *
+import curses
 
 class VideoFile(object):
     def __init__(self, name, camera_schema, path, day, location, scene, rig, camera_number, video_format='MP4'):
@@ -164,13 +164,14 @@ class Project(object):
         self.volume_path = volume_path
         self.camera_schema = camera_schema
         self.camera_order = camera_order
-        ## MAIN:
+        self.info = []
         self.load_config()
+        ## MAIN:
+    def main(self):
         self.command_line_mode()
         self.detect_volumes()
         self.create_project_workspace()
         self.set_camera_numbers()
-        self.info = []
         for volume in self.volumes:
             volume.normalise_video_numbers()
             self.info.append(volume.get_info())
@@ -186,9 +187,12 @@ class Project(object):
 
     def detect_volumes(self):
         camera_number = 1
-        for volume in os.listdir(volume_path):
-            self.volumes.append(Volume(volume, self.camera_schema, self.volume_path, self.day, self.location, self.scene, self.rig, camera_number))
-            camera_number += 1
+        # self.volumes = []
+        if len(os.listdir(volume_path)) != len(self.volumes):
+            self.volumes = []
+            for volume in os.listdir(volume_path):
+                self.volumes.append(Volume(volume, self.camera_schema, self.volume_path, self.day, self.location, self.scene, self.rig, camera_number))
+                camera_number += 1
 
     def load_config(self):
         with open('config', 'r') as config:
@@ -235,8 +239,11 @@ class Project(object):
                 self.if_not_target_dir_make_dir()
                 self.target = os.path.join(self.target, 'DAY_{}'.format(self.day.replace(' ', '_')))
                 self.if_not_target_dir_make_dir()
-                # Make Empty Dailies Folder
-                dailies = os.path.join(self.target, 'DAILIES')
+                # Make empty project stuff
+                projects = os.path.join(self.target, 'PROJECTS')
+                if not os.path.isdir(projects):
+                    os.mkdir(projects)
+                dailies = os.path.join(projects, 'DAILIES')
                 if not os.path.isdir(dailies):
                     os.mkdir(dailies)
                 # Continue Making target Dir
@@ -269,6 +276,12 @@ class Project(object):
                         video.get_info(False)
                         csv.write('{},{},{},{},{},{},{},{},{},{}\n'.format(video.new_name, video.camera_number, video.video_number, video.chunk_number, video.creation_time, video.duration, video.absolute_duration,  video.bitrate, video.frame_rate, video.resolution))
 
+volume_path = '/Volumes/'
+camera_schema = (['DCIM/100GOPRO', 'DCIM/101GOPRO'], ['GOPR', 'GP'])
+camera_order = None
+
+# Working Version
+
 if len(sys.argv) > 1:
     if sys.argv[1] == '-h':
         print 'give me the SD names in order\neg usage: imp C10 SD12 C45 CardName10 etc'
@@ -277,6 +290,47 @@ if len(sys.argv) > 1:
     camera_order = sys.argv[1:]
 else:
     camera_order = None
-volume_path = '/Volumes/'
-camera_schema = (['DCIM/100GOPRO', 'DCIM/101GOPRO'], ['GOPR', 'GP'])
 my_project = Project(volume_path, camera_schema, camera_order)
+my_project.main()
+
+# Dev Version
+
+# screen = curses.initscr()
+# dims = screen.getmaxyx()
+# curses.start_color()
+# curses.use_default_colors()
+# curses.curs_set(0)
+# curses.noecho()
+# screen.refresh()
+# screen.clear()
+# border = 2
+# # THEME
+# curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
+# curses.init_pair(2, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+# curses.init_pair(3, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+# curses.init_pair(4, curses.COLOR_RED, curses.COLOR_BLACK)
+# my_project = Project(volume_path, camera_schema, camera_order)
+# user_input = 'dontquit'
+# while user_input != ord('q'):
+#     screen.clear()
+#     my_project.detect_volumes()
+#     volumes = my_project.volumes
+#     screen.addstr(0, border, 'Volume Type: \tVolume Name:\tCamera Number:', )
+#     for n, volume in enumerate(volumes):
+#         if volume.is_card:
+#             screen.addstr(n+border, border, 'Camera' + '\t' + volume.name + '\t\t' + str(volume.camera_number), curses.color_pair(1))
+#         elif volume.target:
+#             screen.addstr(n+border, border, 'Target\t' + volume.name, curses.color_pair(2))
+#         else:
+#             screen.addstr(n+border, border, '\t\t' + volume.name, curses.color_pair(4))
+#         screen.refresh()
+#     screen.addstr(dims[0]-border-4, border, 'Scene\t\t' + my_project.scene)
+#     screen.addstr(dims[0]-border-3, border, 'Day\t\t' + str(my_project.day))
+#     screen.addstr(dims[0]-border-2, border, 'Location\t' + my_project.location)
+#     screen.addstr(dims[0]-border, border, '[q]uit\t[u]pdate')
+#
+#     user_input = screen.getch()
+#
+#
+# curses.endwin()
+# exit()
