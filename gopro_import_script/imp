@@ -1,17 +1,282 @@
 #!/usr/bin/env python
-import argparse
-from importManager import *
+import sys
+import os
+import time
+import pickle
+import time
+import shutil
+import hashlib
+from threading import Thread, activeCount
+import subprocess as sp
+from Tkinter import *
 
+class VideoFile(object):
+    def __init__(self, name, camera_schema, path, day, location, scene, rig, camera_number, video_format='MP4'):
+        self.FFMPEG_BIN = "ffmpeg"
+        self.infos = ''
+        self.day = day
+        self.location = location
+        self.scene = scene
+        self.name = name
+        self.new_name = name
+        self.camera_number = camera_number
+        self.rig = rig
+        self.name = name
+        self.path = path
+        self.absolute_path = os.path.join(path, name)
+        self.is_video_file = False
+        self.data_schema = camera_schema[1]
+        self.video_format = video_format
+        if video_format in self.absolute_path:
+            self.is_video_file = True
+            self.get_number()
+            self.analyse()
+            self.digest_infos()
+            self.get_absolute_duration()
+            self.get_info(False)
 
-parser = argparse.ArgumentParser(description="imp360 requires the SD card numbers in order of their corresponding camera number as input. Ensure SD Cards are connected prior to running. If you command't connect all SD cards in one go, use the -m flag to add more cameras to the same data dump in subsequent sessions. Always work from Cam_1, Cam_2, Cam_3, ..., Cam_N")
-parser.add_argument('Card Numbers', metavar='N', type=int, nargs='+', help='Card Numbers in Camera Order')
-parser.add_argument('-m', '--more', help='Append More Cards to the last Data Dump and Take', dest='more', action='store_true', required=False)
+    def get_number(self):
+        # https://gopro.com/support/articles/hero3-and-hero3-file-naming-convention
+        if self.data_schema[0] in self.name:
+            self.video_number = int((self.name.split(self.data_schema[0]))[-1].split('.' + self.video_format)[0])
+            self.chunk_number = 0
+        if self.data_schema[1] in self.name:
+            self.video_number = (self.name.split(self.data_schema[1]))[-1].split('.' + self.video_format)[0]
+            self.chunk_number = int(self.video_number[:2])
+            self.video_number = int(self.video_number[2:])
 
-args = vars(parser.parse_args())
-os.system('echo Go, SD Importer, Go! | cowsay | lolcat')
-cards = args['Card Numbers']
-more = False
-if args['more']:
-    more = True
-q = raw_input('\033[93m'+'Press Any Key...'+'\033[0m')
-ImportManager(cards, more)
+    def analyse(self):
+        command = [self.FFMPEG_BIN,'-i', self.absolute_path, '-']
+        pipe = sp.Popen(command, stdout=sp.PIPE, stderr=sp.PIPE)
+        pipe.stdout.readline()
+        self.infos = pipe.stderr.read()
+        pipe.terminate()
+
+    def digest_infos(self):
+        index = self.infos.find('creation_time   : ')
+        self.creation_time = self.infos[index+len('creation_time   : '):index+len('creation_time   : ' )+len('2015-01-01 00:32:49')]
+        index = self.infos.find('Duration: ')
+        self.duration = self.infos[index+len('Duration: '):index+len('Duration: ')+len('00:06:07.47')]
+        index = self.infos.find('bitrate: ')
+        self.bitrate = self.infos[index+len('bitrate: '):index+len('bitrate: ')+len('60158 kb/s')]
+        index = self.infos.find(' fps')
+        self.frame_rate = self.infos[index-5:index]
+        index = self.infos.find(' [SAR')
+        self.resolution = self.infos[index-len('1920x1440'):index]
+
+    def get_absolute_duration(self):
+        hours = float(self.duration[:2])
+        minutes = float(self.duration[3:5])
+        seconds = float(self.duration[6:])
+        self.absolute_duration = 60*60*hours + 60*minutes + seconds
+
+    def get_info(self, verbose=True):
+        if self.is_video_file:
+            self.infos = (['File Name', self.new_name], ['Camera Number', self.camera_number], ['Video Number', self.video_number], ['Chunk Number', self.chunk_number], ['Created', self.creation_time], ['Duration', self.duration], ['Duration (sec)', self.absolute_duration], ['Bitrate', self.bitrate], ['Frame Rate', self.frame_rate], ['Resolution', self.resolution])
+            self.make_name()
+            if verbose:
+                print '\n' + self.new_name + '\n'
+                for info in self.infos:
+                    print '{}:\t\t{}'.format(info[0], info[1])
+            return self.infos
+
+    def make_name(self):
+        self.new_name = 'Cam{}_Vid{}_Prt{}_Day{}_Scene_{}.MP4'.format(self.camera_number, self.video_number, self.chunk_number, self.day, self.scene)
+        self.new_name = self.new_name.replace(' ', '_').upper()
+
+    def copy(self, target):
+        if self.is_video_file:
+            print self.new_name + ' Begin'
+            checksum = self.md5(self.absolute_path)
+            shutil.copyfile(self.absolute_path, os.path.join(target, self.new_name))
+            checksum2 = self.md5(os.path.join(target, self.new_name))
+            print self.new_name + ' Complete'
+            if checksum2 != checksum:
+                print '\033[91m'+"\nError Copying {} to {}\n".format(file_object.path, target)+'\033[0m'
+                sys.stdout.write('\a')
+                sys.stdout.flush()
+
+    def md5(self, fname):
+        hash = hashlib.md5()
+        with open(fname) as f:
+            for chunk in iter(lambda: f.read(4096), ""):
+                hash.update(chunk)
+        # print 'md5 checksum: ' + hash.hexdigest()
+        return hash.hexdigest()
+
+class Volume(object):
+    def __init__(self, name, camera_schema, volume_path, day, location, scene, rig, camera_number):
+        self.name = name
+        self.day = day
+        self.location = location
+        self.scene = scene
+        self.videos = []
+        self.info = []
+        self.asset_path = ''
+        self.is_card = False
+        if name == 'TA_VR_M2' or name == 'TA_VR_M1': #HACK
+            self.target = True
+        else:
+            self.target = False
+        self.camera_number = camera_number
+        self.rig = rig
+        self.camera_schema = camera_schema
+        self.find_assets()
+
+    def find_assets(self):
+        for schema in self.camera_schema[0]:
+            asset_path = os.path.join(volume_path, self.name)
+            asset_path = os.path.join(asset_path, schema)
+            if os.path.isdir(asset_path):
+                self.asset_path = asset_path
+                self.is_card = True
+        if self.is_card:
+            for _file in os.listdir(self.asset_path):
+                self.videos.append(VideoFile(_file, self.camera_schema, self.asset_path, self.day, self.location, self.scene, self.rig, self.camera_number))
+        self.get_info()
+
+    def set_camera_number(self, camera_number):
+        self.camera_number = camera_number
+        for video in self.videos:
+            video.camera_number = self.camera_number
+
+    def normalise_video_numbers(self):
+        if self.is_card:
+            sort_array = []
+            for video in self.videos:
+                if video.is_video_file:
+                    video.video_number += 1000 # prevent dumb wrap around stuff
+                    sort_array.append(video.video_number)
+                smallest_value = sorted(sort_array)[0]
+            for video in self.videos:
+                if video.is_video_file:
+                    video.video_number -= (smallest_value - 1)
+
+    def get_info(self):
+        for video in self.videos:
+            if video.is_video_file:
+                self.info.append(video.get_info())
+        return self.info
+
+class Project(object):
+    def __init__(self, volume_path, camera_schema, camera_order=None):
+        self.volumes = []
+        self.volume_path = volume_path
+        self.camera_schema = camera_schema
+        self.camera_order = camera_order
+        ## MAIN:
+        self.load_config()
+        self.command_line_mode()
+        self.detect_volumes()
+        self.create_project_workspace()
+        self.set_camera_numbers()
+        self.info = []
+        for volume in self.volumes:
+            volume.normalise_video_numbers()
+            self.info.append(volume.get_info())
+        self.copy()
+        self.make_csv()
+        self.save_config()
+
+    def set_camera_numbers(self):
+        if self.camera_order is not None:
+            for volume in self.volumes:
+                if volume.is_card:
+                    volume.set_camera_number(int(self.camera_order.index(volume.name) + 1))
+
+    def detect_volumes(self):
+        camera_number = 1
+        for volume in os.listdir(volume_path):
+            self.volumes.append(Volume(volume, self.camera_schema, self.volume_path, self.day, self.location, self.scene, self.rig, camera_number))
+            camera_number += 1
+
+    def load_config(self):
+        with open('config', 'r') as config:
+            self.menu = pickle.load(config)
+            # self.menu = (['DAY', ''], ['LOCATION', ''], ['SCENE', ''], ['RIG', ''])
+            config.close()
+        self.day = self.menu[0]
+        self.day = self.day[1]
+        self.location = self.menu[1]
+        self.location = self.location[1]
+        self.scene = self.menu[2]
+        self.scene = self.scene[1]
+        self.rig = self.menu[3]
+        self.rig = self.rig[1]
+
+    def command_line_mode(self):
+        for i, setting in enumerate(self.menu):
+            new_setting = raw_input('{}: ENTER TO KEEP {}\t\n'.format(setting[0], setting[1]))
+            if new_setting != '':
+                setting[1] = new_setting
+        self.day = self.menu[0]
+        self.day = self.day[1]
+        self.location = self.menu[1]
+        self.location = self.location[1]
+        self.scene = self.menu[2]
+        self.scene = self.scene[1]
+        self.rig = self.menu[3]
+        self.rig = self.rig[1]
+
+    def save_config(self):
+        with open('config', 'wb') as config:
+            pickle.dump(self.menu, config)
+            config.close()
+
+    def if_not_target_dir_make_dir(self):
+        if not os.path.isdir(self.target):
+            os.mkdir(self.target)
+
+    def create_project_workspace(self):
+        for volume in self.volumes:
+            if volume.target:
+                self.target = os.path.join(self.volume_path, volume.name)
+                self.target = os.path.join(self.target, self.location.replace(' ', '_'))
+                self.if_not_target_dir_make_dir()
+                self.target = os.path.join(self.target, 'DAY_{}'.format(self.day.replace(' ', '_')))
+                self.if_not_target_dir_make_dir()
+                # Make Empty Dailies Folder
+                dailies = os.path.join(self.target, 'DAILIES')
+                if not os.path.isdir(dailies):
+                    os.mkdir(dailies)
+                # Continue Making target Dir
+                self.target = os.path.join(self.target, 'SOURCE_MATERIAL')
+                self.if_not_target_dir_make_dir()
+                self.target = os.path.join(self.target, '{}_{}'.format(self.scene.replace(' ', '_'), self.rig.replace(' ', '_')))
+                self.if_not_target_dir_make_dir()
+
+    def copy(self):
+        i = 0
+        j = 0
+        start_time = time.time()
+        for volume in self.volumes:
+            if volume.is_card:
+                j += 1
+                for video in volume.videos:
+                    i += 1
+                    t = Thread(target=video.copy, args = [self.target]).start()
+        while(activeCount() > 1):
+                time.sleep(2)
+                print('\033[94m'+"Waiting for active copy threads to finish: {} active threads, it has been {} seconds".format(activeCount(), time.time()-start_time) + '\033[0m')
+
+    def make_csv(self):
+        with open(os.path.join(self.target, '{}_Import.csv'.format(self.scene)), 'wb') as csv:
+            csv.write('Day {}, {}, {}, Rig {}\n'.format(self.day, self.location, self.scene, self.rig))
+            csv.write('File Name, Camera Number, Video Number, Chunk Number, Created, Duration, Duration (sec), Bitrate, Frame Rate, Resolution\n')
+            for volume in self.volumes:
+                for video in volume.videos:
+                    if video.is_video_file:
+                        video.get_info(False)
+                        csv.write('{},{},{},{},{},{},{},{},{},{}\n'.format(video.new_name, video.camera_number, video.video_number, video.chunk_number, video.creation_time, video.duration, video.absolute_duration,  video.bitrate, video.frame_rate, video.resolution))
+
+if len(sys.argv) > 1:
+    if sys.argv[1] == '-h':
+        print 'give me the SD names in order\neg usage: imp C10 SD12 C45 CardName10 etc'
+        exit()
+
+    camera_order = sys.argv[1:]
+else:
+    camera_order = None
+volume_path = '/Volumes/'
+camera_schema = (['DCIM/100GOPRO', 'DCIM/101GOPRO'], ['GOPR', 'GP'])
+my_project = Project(volume_path, camera_schema, camera_order)
