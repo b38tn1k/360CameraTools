@@ -216,6 +216,12 @@ class Project(object):
         # END THEME
         user_input = 'dontquit'
         while user_input != ord('q'):
+            if user_input == ord('h'):
+                self.screen.clear()
+                self.screen.addstr(0, self.border, 'HELP:')
+                self.screen.addstr(self.border, self.border, 'To Navigate:\n\tj:\tDown\n\tk:\tUp')
+                self.screen.addstr(self.border+6, self.border, 'ENTER TO CONTINUE', curses.color_pair(error_th))
+                self.screen.getstr(0,0,0)
             self.screen.clear()
             self.screen.addstr(self.dims[0]-self.border-6, self.border, 'Scene')
             self.screen.addstr(self.dims[0]-self.border-5, self.border, 'Day')
@@ -263,6 +269,7 @@ class Project(object):
                 self.screen.addstr(self.dims[0]-self.border-9, self.border, "\t\t\t\t\t\t\t\t")
 
             if user_input == ord('i'):
+                self.screen.addstr(self.dims[0]-self.border-10, self.border, "Please [u]pdate to apply changes", curses.color_pair(4))
                 curses.echo()
                 if cursor == 0:
                     self.rig = self.screen.getstr(self.dims[0]-self.border-3, self.border*8, 60)
@@ -281,12 +288,6 @@ class Project(object):
                         else:
                             volume.target = False
                             volume.is_card = True
-            if user_input == ord('h'):
-                self.screen.clear()
-                self.screen.addstr(0, self.border, 'HELP:')
-                self.screen.addstr(self.border, self.border, 'To Navigate:\n\tj:\tDown\n\tk:\tUp')
-                self.screen.addstr(self.border+5, self.border, 'ENTER TWICE TO CONTINUE', curses.color_pair(error_th))
-                self.screen.getstr(0,0,0)
             bug = ['', '', '', '', '']
             bug[cursor] = '>'
             self.screen.addstr(self.dims[0]-self.border-6, self.border*8, self.scene)
