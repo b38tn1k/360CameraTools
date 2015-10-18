@@ -360,6 +360,7 @@ class Project(object):
                     if video.is_video_file:
                         video.get_info(False)
                         csv.write('{},{},{},{},{},{},{},{},{},{}\n'.format(video.new_name, video.camera_number, video.video_number, video.chunk_number, video.creation_time, video.duration, video.absolute_duration,  video.bitrate, video.frame_rate, video.resolution))
+            csv.close()
 
 volume_path = '/Volumes/'
 camera_schema = (['DCIM/100GOPRO', 'DCIM/101GOPRO'], ['GOPR', 'GP'])
