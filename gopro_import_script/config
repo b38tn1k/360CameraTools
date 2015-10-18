@@ -1,10 +1,10 @@
 (lp0
 S'Today'
 p1
-aS'NSW'
+aS'this is the scene field'
 p2
-aS'location'
+aS'this is the location field'
 p3
-aS'rig'
+aS'this is the rig field'
 p4
 a.
