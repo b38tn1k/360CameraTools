@@ -407,16 +407,21 @@ class Project(object):
                             time.sleep(2)
                             self.screen.addstr(self.dims[0]-self.border-10, self.border, "Waiting for active copy threads to finish:", curses.color_pair(self.priority_messages))
                             self.screen.addstr(self.dims[0]-self.border-9, self.border, "{} active threads, it has been {} seconds".format(activeCount(), time.time()-start_time), curses.color_pair(self.priority_messages))
+                            self.copied_videos = 0
+                            for _volume in self.volumes:
+                                self.copied_videos += _volume.copied_videos
+                            self.draw_infos()
+                            self.draw_console()
                             self.screen.refresh()
-                    self.copied_videos = 0
-                    for _volume in self.volumes:
-                        self.copied_videos += _volume.copied_videos
-                    self.draw_infos()
-                    self.draw_console
                     while(activeCount() > 1):
                             time.sleep(2)
                             self.screen.addstr(self.dims[0]-self.border-10, self.border, "Waiting for active copy threads to finish:", curses.color_pair(self.priority_messages))
                             self.screen.addstr(self.dims[0]-self.border-9, self.border, "{} active threads, it has been {} seconds".format(activeCount(), time.time()-start_time), curses.color_pair(self.priority_messages))
+                            self.copied_videos = 0
+                            for _volume in self.volumes:
+                                self.copied_videos += _volume.copied_videos
+                            self.draw_infos()
+                            self.draw_console()
                             self.screen.refresh()
         self.screen.refresh()
 
