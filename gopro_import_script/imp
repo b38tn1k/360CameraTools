@@ -11,9 +11,10 @@ import subprocess as sp
 import curses
 
 class VideoFile(object):
-    def __init__(self, name, camera_schema, path, day, location, scene, rig, camera_number, video_format='MP4'):
+    def __init__(self, parent, name, camera_schema, path, day, location, scene, rig, camera_number, video_format='MP4'):
         self.FFMPEG_BIN = "ffmpeg"
         self.infos = ''
+        self.parent = parent
         self.day = day
         self.location = location
         self.scene = scene
@@ -96,6 +97,8 @@ class VideoFile(object):
                 print '\033[91m'+"\nError Copying {} to {}\n".format(file_object.path, target)+'\033[0m'
                 sys.stdout.write('\a')
                 sys.stdout.flush()
+            else:
+                self.parent.copied_videos += 1
 
     def md5(self, fname):
         hash = hashlib.md5()
@@ -115,6 +118,8 @@ class Volume(object):
         self.info = []
         self.asset_path = ''
         self.is_card = False
+        self.video_count = 0
+        self.copied_videos = 0
         if name == 'TA_VR_M2' or name == 'TA_VR_M1' or 'Master' in name: #HACK
             self.target = True
         else:
@@ -133,7 +138,9 @@ class Volume(object):
                 self.is_card = True
         if self.is_card:
             for _file in os.listdir(self.asset_path):
-                self.videos.append(VideoFile(_file, self.camera_schema, self.asset_path, self.day, self.location, self.scene, self.rig, self.camera_number))
+                if '4' in _file:
+                    self.video_count += 1
+                    self.videos.append(VideoFile(self, _file, self.camera_schema, self.asset_path, self.day, self.location, self.scene, self.rig, self.camera_number))
         self.get_info()
 
     def set_camera_number(self, camera_number):
@@ -158,6 +165,7 @@ class Volume(object):
             else:
                 for video in self.videos:
                     video.video_number = 1
+
     def get_info(self):
         for video in self.videos:
             if video.is_video_file:
@@ -173,8 +181,9 @@ class Project(object):
         self.info = []
         self.no_target = True
         self.load_config()
+        self.video_count = 0
         self.border = 2
-        ## MAIN:
+
     def command_line_main(self):
         self.command_line_mode()
         self.detect_volumes()
@@ -190,7 +199,6 @@ class Project(object):
     def curses_main(self):
         # INIT PROJECT SETTINGS
         self.detect_volumes()
-        self.create_project_workspace()
         self.set_camera_numbers()
         self.screen = curses.initscr()
         self.dims = self.screen.getmaxyx()
@@ -216,6 +224,17 @@ class Project(object):
         # END THEME
         user_input = 'dontquit'
         while user_input != ord('q'):
+            if user_input == ord('c'):
+                self.create_project_workspace()
+                self.set_camera_numbers()
+                for volume in self.volumes:
+                    volume.normalise_video_numbers()
+                    self.info.append(volume.get_info())
+                self.create_project_workspace()
+                self.copy()
+                self.make_csv()
+                self.screen.addstr(self.dims[0]-self.border-10, self.border, "COPY COMPLETE!\t\t\t\t", curses.color_pair(4))
+                self.screen.addstr(self.dims[0]-self.border-9, self.border, "\t\t\t\t\t\t\t\t")
             if user_input == ord('h'):
                 self.screen.clear()
                 self.screen.addstr(0, self.border, 'HELP:')
@@ -223,20 +242,20 @@ class Project(object):
                 self.screen.addstr(self.border+6, self.border, 'ENTER TO CONTINUE', curses.color_pair(error_th))
                 self.screen.getstr(0,0,0)
             self.screen.clear()
-            self.screen.addstr(self.dims[0]-self.border-6, self.border, 'Scene')
-            self.screen.addstr(self.dims[0]-self.border-5, self.border, 'Day')
-            self.screen.addstr(self.dims[0]-self.border-4, self.border, 'Location')
-            self.screen.addstr(self.dims[0]-self.border-3, self.border, 'Rig')
-            self.screen.addstr(self.dims[0]-self.border-2, self.border, 'Target')
+            self.screen.addstr(self.dims[0]-self.border-7, self.border, 'Scene')
+            self.screen.addstr(self.dims[0]-self.border-6, self.border, 'Day')
+            self.screen.addstr(self.dims[0]-self.border-5, self.border, 'Location')
+            self.screen.addstr(self.dims[0]-self.border-4, self.border, 'Rig')
+            self.screen.addstr(self.dims[0]-self.border-3, self.border, 'Target')
+            self.screen.addstr(self.dims[0]-self.border-1, self.border, 'Video Files in Project:' + str(self.video_count), curses.color_pair(camera_th))
             for volume in self.volumes:
                 if volume.target:
-                    self.screen.addstr(self.dims[0]-self.border-2, self.border*8, volume.name)
-
-            self.screen.addstr(0, self.border, 'Volume Type: \tVolume Name:\tCamera Number:' )
-            self.screen.addstr(self.dims[0]-self.border, self.border, '[q]uit\t[u]pdate\t[c]opy  \ted[i]t   \t[h]elp', curses.color_pair(menu_th))
+                    self.screen.addstr(self.dims[0]-self.border-3, self.border*8, volume.name)
+            self.screen.addstr(0, self.border, 'Volume Type: \tVolume Name:\tCamera Number:\t Video Count:\tCopied Videos:' )
+            self.screen.addstr(self.dims[0]-self.border, self.border, '[q]uit  [u]pdate  [c]opy  ed[i]t  [e]ject_cameras  [h]elp', curses.color_pair(menu_th))
             for n, volume in enumerate(self.volumes):
                 if volume.is_card:
-                    self.screen.addstr(n+self.border, self.border, 'Camera\t' + volume.name + '\t\t' + str(volume.camera_number), curses.color_pair(camera_th))
+                    self.screen.addstr(n+self.border, self.border, 'Camera\t' + volume.name + '\t\t' + str(volume.camera_number) + '\t\t' + str(volume.video_count) + '\t\t' + str(volume.copied_videos), curses.color_pair(camera_th))
                 elif volume.target:
                     self.screen.addstr(n+self.border, self.border, 'Target\t' + volume.name, curses.color_pair(target_th))
                 else:
@@ -256,31 +275,33 @@ class Project(object):
                 for volume in self.volumes:
                     volume.normalise_video_numbers()
                     self.info.append(volume.get_info())
-                self.create_project_workspace()
-            if user_input == ord('c'):
+                    for volume in self.volumes:
+                        for video in volume.videos:
+                            video.day = self.day
+                            video.scene = self.scene
+                            video.location = self.location
+            if user_input == ord('e'):
+                for volume in self.volumes:
+                    os.system('diskutil umount {}'.format(volume.name))
+                self.detect_volumes()
                 self.set_camera_numbers()
                 for volume in self.volumes:
                     volume.normalise_video_numbers()
                     self.info.append(volume.get_info())
-                self.create_project_workspace()
-                self.copy()
-                self.make_csv()
-                self.screen.addstr(self.dims[0]-self.border-10, self.border, "COPY COMPLETE!\t\t\t\t", curses.color_pair(4))
-                self.screen.addstr(self.dims[0]-self.border-9, self.border, "\t\t\t\t\t\t\t\t")
 
             if user_input == ord('i'):
                 self.screen.addstr(self.dims[0]-self.border-10, self.border, "Please [u]pdate to apply changes", curses.color_pair(4))
                 curses.echo()
                 if cursor == 0:
-                    self.rig = self.screen.getstr(self.dims[0]-self.border-3, self.border*8, 60)
+                    self.rig = self.screen.getstr(self.dims[0]-self.border-4, self.border*8, 60)
                 if cursor == 1:
-                    self.location = self.screen.getstr(self.dims[0]-self.border-4, self.border*8, 60)
+                    self.location = self.screen.getstr(self.dims[0]-self.border-5, self.border*8, 60)
                 if cursor == 2:
-                    self.day = self.screen.getstr(self.dims[0]-self.border-5, self.border*8, 60)
+                    self.day = self.screen.getstr(self.dims[0]-self.border-6, self.border*8, 60)
                 if cursor == 3:
-                    self.scene = self.screen.getstr(self.dims[0]-self.border-6, self.border*8, 60)
+                    self.scene = self.screen.getstr(self.dims[0]-self.border-7, self.border*8, 60)
                 if cursor == 4:
-                    volume_name = self.screen.getstr(self.dims[0]-self.border-2, self.border*8, 60)
+                    volume_name = self.screen.getstr(self.dims[0]-self.border-3, self.border*8, 60)
                     for volume in self.volumes:
                         if volume_name in volume.name:
                             volume.target = True
@@ -288,17 +309,18 @@ class Project(object):
                         else:
                             volume.target = False
                             volume.is_card = True
+                curses.noecho()
             bug = ['', '', '', '', '']
             bug[cursor] = '>'
-            self.screen.addstr(self.dims[0]-self.border-6, self.border*8, self.scene)
-            self.screen.addstr(self.dims[0]-self.border-6, 0, bug[3])
-            self.screen.addstr(self.dims[0]-self.border-5, self.border*8, str(self.day))
-            self.screen.addstr(self.dims[0]-self.border-5, 0, bug[2])
-            self.screen.addstr(self.dims[0]-self.border-4, self.border*8, self.location)
-            self.screen.addstr(self.dims[0]-self.border-4, 0, bug[1])
-            self.screen.addstr(self.dims[0]-self.border-3, self.border*8, self.rig)
-            self.screen.addstr(self.dims[0]-self.border-3, 0, bug[0])
-            self.screen.addstr(self.dims[0]-self.border-2, 0, bug[4])
+            self.screen.addstr(self.dims[0]-self.border-7, self.border*8, self.scene)
+            self.screen.addstr(self.dims[0]-self.border-7, 0, bug[3])
+            self.screen.addstr(self.dims[0]-self.border-6, self.border*8, str(self.day))
+            self.screen.addstr(self.dims[0]-self.border-6, 0, bug[2])
+            self.screen.addstr(self.dims[0]-self.border-5, self.border*8, self.location)
+            self.screen.addstr(self.dims[0]-self.border-5, 0, bug[1])
+            self.screen.addstr(self.dims[0]-self.border-4, self.border*8, self.rig)
+            self.screen.addstr(self.dims[0]-self.border-4, 0, bug[0])
+            self.screen.addstr(self.dims[0]-self.border-3, 0, bug[4])
             self.screen.refresh()
             user_input = self.screen.getch()
         curses.endwin()
@@ -318,6 +340,8 @@ class Project(object):
             for volume in os.listdir(volume_path):
                 self.volumes.append(Volume(volume, self.camera_schema, self.volume_path, self.day, self.location, self.scene, self.rig, camera_number))
                 camera_number += 1
+            for volume in self.volumes:
+                self.video_count += volume.video_count
 
     def load_config(self):
         with open('config', 'r') as config:
@@ -364,11 +388,16 @@ class Project(object):
                 for video in volume.videos:
                     i += 1
                     t = Thread(target=video.copy, args = [self.target]).start()
-        while(activeCount() > 1):
-                time.sleep(2)
-                self.screen.addstr(self.dims[0]-self.border-10, self.border, "Waiting for active copy threads to finish:", curses.color_pair(4))
-                self.screen.addstr(self.dims[0]-self.border-9, self.border, "{} active threads, it has been {} seconds".format(activeCount(), time.time()-start_time), curses.color_pair(4))
-                self.screen.refresh()
+                    while(activeCount() >= 7):
+                            time.sleep(2)
+                            self.screen.addstr(self.dims[0]-self.border-10, self.border, "Waiting for active copy threads to finish:", curses.color_pair(4))
+                            self.screen.addstr(self.dims[0]-self.border-9, self.border, "{} active threads, it has been {} seconds".format(activeCount(), time.time()-start_time), curses.color_pair(4))
+                            self.screen.refresh()
+                    while(activeCount() > 1):
+                            time.sleep(2)
+                            self.screen.addstr(self.dims[0]-self.border-10, self.border, "Waiting for active copy threads to finish:", curses.color_pair(4))
+                            self.screen.addstr(self.dims[0]-self.border-9, self.border, "{} active threads, it has been {} seconds".format(activeCount(), time.time()-start_time), curses.color_pair(4))
+                            self.screen.refresh()
         self.screen.refresh()
 
     def make_csv(self):
@@ -395,7 +424,5 @@ if len(sys.argv) > 1:
 else:
     camera_order = None
 
-
 my_project = Project(volume_path, camera_schema, camera_order)
-# my_project.command_line_main()
 my_project.curses_main()
