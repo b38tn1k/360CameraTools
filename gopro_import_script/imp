@@ -138,7 +138,7 @@ class Volume(object):
                 self.is_card = True
         if self.is_card:
             for _file in os.listdir(self.asset_path):
-                if '4' in _file:
+                if 'MP4' in _file or 'mp4' in _file:
                     self.video_count += 1
                     self.videos.append(VideoFile(self, _file, self.camera_schema, self.asset_path, self.day, self.location, self.scene, self.rig, self.camera_number))
         self.get_info()
