@@ -10,6 +10,13 @@ from threading import Thread, activeCount
 import subprocess as sp
 import curses
 
+'''
+TODO:
+2. Make the threading better - trying to distribute reading across cards / ports but could look into more simulataneous copying and maybe figure out a dynamic limit??
+3. Add ability to change camera numbers in the application.
+'''
+
+
 class VideoFile(object):
     def __init__(self, parent, name, camera_schema, path, day, location, scene, rig, camera_number, video_format='MP4'):
         self.FFMPEG_BIN = "ffmpeg"
@@ -295,6 +302,8 @@ class Project(object):
                         if volume_name in volume.name:
                             volume.target = True
                             volume.is_card = False
+                        elif not volume.target and not volume.is_card:
+                            pass #this feels wrong
                         else:
                             volume.target = False
                             volume.is_card = True
