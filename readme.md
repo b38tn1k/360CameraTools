@@ -1,4 +1,4 @@
-# Multi GoPro SD Importer
+# 360 Camera Tools
 For use with 360 GoPro camera rigs of any size!
 ##How to setup...
 ###SD Importer Script
