@@ -28,6 +28,7 @@ class VideoFile(object):
         self.is_video_file = False
         self.data_schema = camera_schema[1]
         self.video_format = video_format
+        self.copied = False
         if video_format in self.absolute_path:
             self.is_video_file = True
             self.get_number()
@@ -99,6 +100,7 @@ class VideoFile(object):
                 sys.stdout.flush()
             else:
                 self.parent.copied_videos += 1
+                self.copied = True
 
     def md5(self, fname):
         hash = hashlib.md5()
@@ -392,38 +394,43 @@ class Project(object):
         i = 0
         j = 0
         start_time = time.time()
-        for volume in self.volumes:
-            if volume.is_card:
-                j += 1
+        while self.video_count != self.copied_videos:
+            for volume in self.volumes:
+                card_active = False
                 for video in volume.videos:
-                    i += 1
-                    t = Thread(target=video.copy, args = [self.target]).start()
-                    self.copied_videos = 0
-                    for _volume in self.volumes:
-                        self.copied_videos += _volume.copied_videos
-                    self.draw_infos()
-                    self.draw_console
-                    while(activeCount() >= 8): # SLOW IT DOWN HERE
-                            time.sleep(2)
-                            self.screen.addstr(self.dims[0]-self.border-10, self.border, "Waiting for active copy threads to finish:", curses.color_pair(self.priority_messages))
-                            self.screen.addstr(self.dims[0]-self.border-9, self.border, "{} active threads, it has been {} seconds".format(activeCount(), time.time()-start_time), curses.color_pair(self.priority_messages))
-                            self.copied_videos = 0
-                            for _volume in self.volumes:
-                                self.copied_videos += _volume.copied_videos
-                            self.draw_infos()
-                            self.draw_console()
-                            self.screen.refresh()
-                    while(activeCount() > 1):
-                            time.sleep(2)
-                            self.screen.addstr(self.dims[0]-self.border-10, self.border, "Waiting for active copy threads to finish:", curses.color_pair(self.priority_messages))
-                            self.screen.addstr(self.dims[0]-self.border-9, self.border, "{} active threads, it has been {} seconds".format(activeCount(), time.time()-start_time), curses.color_pair(self.priority_messages))
-                            self.copied_videos = 0
-                            for _volume in self.volumes:
-                                self.copied_videos += _volume.copied_videos
-                            self.draw_infos()
-                            self.draw_console()
-                            self.screen.refresh()
-        self.screen.refresh()
+                    if not video.copied and not card_active:
+        # for volume in self.volumes:
+        #     if volume.is_card:
+        #         j += 1
+        #         for video in volume.videos:
+        #             i += 1
+                        t = Thread(target=video.copy, args = [self.target]).start()
+                        card_active = True
+                        self.copied_videos = 0
+                        for _volume in self.volumes:
+                            self.copied_videos += _volume.copied_videos
+                        self.draw_infos()
+                        self.draw_console
+                        while(activeCount() >= 25): # SLOW IT DOWN HERE
+                                time.sleep(1)
+                                self.screen.addstr(self.dims[0]-self.border-10, self.border, "Waiting for active copy threads to finish:", curses.color_pair(self.priority_messages))
+                                self.screen.addstr(self.dims[0]-self.border-9, self.border, "{} active threads, it has been {} seconds".format(activeCount(), int(time.time()-start_time)), curses.color_pair(self.priority_messages))
+                                self.copied_videos = 0
+                                for _volume in self.volumes:
+                                    self.copied_videos += _volume.copied_videos # this update method can be improved (maybe add a parent to the volume class? self.parent.parent.copied_videos += 1 lol)
+                                self.draw_infos()
+                                self.draw_console()
+                                self.screen.refresh()
+                        while(activeCount() > 1):
+                                time.sleep(1)
+                                self.screen.addstr(self.dims[0]-self.border-10, self.border, "Waiting for active copy threads to finish:", curses.color_pair(self.priority_messages))
+                                self.screen.addstr(self.dims[0]-self.border-9, self.border, "{} active threads, it has been {} seconds".format(activeCount(), int(time.time()-start_time)), curses.color_pair(self.priority_messages))
+                                self.copied_videos = 0
+                                for _volume in self.volumes:
+                                    self.copied_videos += _volume.copied_videos
+                                self.draw_infos()
+                                self.draw_console()
+                                self.screen.refresh()
 
     def make_csv(self):
         with open(os.path.join(self.target, '{}_Import.csv'.format(self.scene)), 'wb') as csv:

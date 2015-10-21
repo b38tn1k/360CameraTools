@@ -24,9 +24,16 @@ def find_max(ordered, x):
     return max(ordered, key=lambda entry: int(entry[x]))
 
 output_directory = os.path.abspath(sys.argv[1])
-print output_directory
-output_directory = output_directory[:-len(sys.argv[1])]
-print "Working with XML at " + output_directory
+split_path = output_directory.split('/')
+export_path = ''
+for _folder in split_path[1:]:
+    if _folder != 'PROJECTS':
+        export_path = export_path + "/" + str(_folder)
+    else:
+        export_path = export_path + "/PROJECTS/"
+        break
+print export_path
+
 
 if sys.argv[1] == '-h':
     print 'feed me an xml from pluraleyes and I will turn it into a audio chart!'
@@ -50,16 +57,12 @@ max_lag = int(find_max(ordered, 1)[1])
 inverted = []
 for value in ordered:
     inverted.append([value[0], max_lag - int(value[1])])
-#
-# with open('importHelperConfig', 'r')as file_object:
-#     location = pickle.load(file_object)
-#     output_path = pickle.load(file_object)
-#     take_count = pickle.load(file_object)
-#     camera_rig = pickle.load(file_object)
-#     start_camera = pickle.load(file_object)
-#     file_object.close()
 
-with open(os.path.join(output_directory, 'AudioSync.csv'), 'wb') as f:
+first_entry = ordered[0]
+first_video = first_entry[0]
+csv_name = '{}.csv'.format(first_video[first_video.index('DAY'):first_video.index('.MP4')])
+
+with open(os.path.join(export_path, csv_name), 'wb') as f:
     f.write('\nFCP Order Frame Offset\n')
     print '\nFCP Order Frame Offset'
     for camera in ordered:
@@ -71,21 +74,3 @@ with open(os.path.join(output_directory, 'AudioSync.csv'), 'wb') as f:
         print camera
         f.write(camera[0] + ',' + str(camera[1]) + '\n')
     f.close()
-
-
-
-
-# full_output = os.path.join(output_path, location + '_Take_' + str(take_count))
-# with open(os.path.join(full_output, '{}_Take_{}_Audio_Sync.csv'.format(location, take_count)), 'wb') as f:
-    # f.write(location+ ',Take ' + str(take_count) + ',' + camera_rig + '\n')
-    # print (location+ ',Take ' + str(take_count) + ',' + camera_rig + '\n')
-    # f.write('FILE, FRAME OFFSET' + '\n')
-    # print ('FILE, FRAME OFFSET' + '\n')
-    # for value in ordered:
-    #     f.write(value[0] + ',' + str(value[1]) + '\n')
-    #     print (value[0] + ',' + str(value[1]) + '\n')
-    # f.write('FILE, INVERTED FRAME OFFSET' + '\n')
-    # print ('FILE, INVERTED FRAME OFFSET' + '\n')
-    # for value in inverted:
-    #     f.write(value[0] + ',' + str(value[1]) + '\n')
-    #     print (value[0] + ',' + str(value[1]) + '\n')
