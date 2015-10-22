@@ -16,6 +16,6 @@ Create a new Service in automator. Then copy and paste the code from lmx into a 
 To import video files from the cards:
 
     imp C28 C34 C23 C43 C02 C33 C44 C65
-will grab all footage of SD cards named C28, C34, C23, C43, C02, etc and drop them all in a chosen target directory. If all cards are in alphanumeric order based inline with the arrangement of the camera cradles in the rig (eg Postion 1 = Card1, Position 2 = Card 2...) then you can just run imp.
+will grab all footage of SD cards named C28, C34, C23, C43, C02, etc and drop them all in a chosen target directory. If all cards are in alphanumeric order based inline with the arrangement of the camera cradles in the rig (eg Postion 1 = Card1, Position 2 = Card 2...) then you can just run imp. For more info:
 
-imp -h for more info
+    imp -h
