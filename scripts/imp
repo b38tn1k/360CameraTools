@@ -176,8 +176,7 @@ class Volume(object):
                     if video.is_video_file:
                         video.video_number += 1000 # prevent dumb wrap around stuff
                         sort_array.append(video.video_number)
-                        sort_array = sorted(sort_array)
-                        smallest_value = sort_array[0]
+                        smallest_value = min(sort_array)
                 for video in self.videos:
                     if video.is_video_file:
                         video.video_number -= (smallest_value - 1)
