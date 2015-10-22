@@ -11,12 +11,6 @@ from threading import Thread, activeCount
 import subprocess as sp
 import curses
 
-'''
-TODO:
-2. Make the threading better - trying to distribute reading across cards / ports but could look into more simulataneous copying and maybe figure out a dynamic limit??
-3. Add ability to change camera numbers in the application.
-'''
-
 def pretty_print(alist):
     for item in alist:
         print str(item)
@@ -32,6 +26,47 @@ class bcolors:
     ENDC = '\033[0m'
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
+
+help_string = bcolors.HEADER + '''      ██╗███╗   ███╗██████╗
+██║████╗ ████║██╔══██╗
+██║██╔████╔██║██████╔╝
+██║██║╚██╔╝██║██╔═══╝
+██║██║ ╚═╝ ██║██║
+╚═╝╚═╝     ╚═╝╚═╝
+360 Camera Data Management Tool
+''' + bcolors.ENDC
+print '''imp has been tested on OSX and requires ffmpeg.
+
+imp allows you to import videos from multiple SD cards
+using a multicard reader. Running in default mode will
+use the name of the card to determine the position of
+the camera within the camera array - the first card
+in alphanumeric order will be Camera 1 and so on.
+
+To customise camera order, input the card names in their
+array order eg. ''' + bcolors.OKGREEN + '''imp SD10 SD23 SD03 SD06''' + bcolors.ENDC + '''
+After launching imp you are able to set the location,
+scene, shoot day, rig and the target volume.
+
+imp can also be run using the -lsvol mode:''' + bcolors.OKGREEN + '''
+imp -lsvol''' + bcolors.ENDC + '''
+which will list all drives as they are connected to your
+machine. This can be helpful when setting up custom camera
+orders.
+
+It is reccomended you install htop:''' + bcolors.OKGREEN + '''
+brew install htop''' + bcolors.ENDC + '''
+to monitor your machine whilst running imp.
+If anything looks hinky, hit cmd-Q!
+
+My workflow for imp in iTerm2 uses a window arrangement
+like this:
++-----+------------+
+|     | imp -lsvol |
++ imp +------------+
+|     |    htop    |
++-----+------------+
+'''
 
 class VideoFile(object):
     def __init__(self, parent, name, camera_schema, path, day, location, scene, rig, camera_number, video_format='MP4'):
@@ -198,8 +233,9 @@ class Volume(object):
         return self.info
 
 class Project(object):
-    def __init__(self, volume_path, camera_schema, camera_order=None):
+    def __init__(self, volume_path, camera_schema, help_string, camera_order=None):
         self.volumes = []
+        self.help_string = help_string
         self.volume_path = volume_path
         self.camera_schema = camera_schema
         self.camera_order = camera_order
@@ -271,7 +307,7 @@ class Project(object):
             if user_input == ord('h'):  # Help
                 self.screen.clear()
                 self.screen.addstr(0, self.border, 'HELP:')
-                self.screen.addstr(self.border, self.border, 'To Navigate:\n\tj:\tDown\n\tk:\tUp')
+                self.screen.addstr(self.border, self.border, 'To Navigate:\n\tj:\tDown\n\tk:\tUp\n  run imp -h for more info')
                 self.screen.addstr(self.border+6, self.border, 'ENTER TO CONTINUE', curses.color_pair(self.priority_messages))
                 self.screen.getstr(0,0,0)
             if user_input == ord('k'):  # Cursor Up
@@ -474,46 +510,7 @@ camera_order = None
 
 if len(sys.argv) > 1:
     if sys.argv[1] == '-h':
-        print bcolors.HEADER + '''      ██╗███╗   ███╗██████╗
-      ██║████╗ ████║██╔══██╗
-      ██║██╔████╔██║██████╔╝
-      ██║██║╚██╔╝██║██╔═══╝
-      ██║██║ ╚═╝ ██║██║
-      ╚═╝╚═╝     ╚═╝╚═╝
-360 Camera Data Management Tool
-        ''' + bcolors.ENDC
-        print '''imp has been tested on OSX and requires ffmpeg.
-
-imp allows you to import videos from multiple SD cards
-using a multicard reader. Running in default mode will
-use the name of the card to determine the position of
-the camera within the camera array - the first card
-in alphanumeric order will be Camera 1 and so on.
-
-To customise camera order, input the card names in their
-array order eg. ''' + bcolors.OKGREEN + '''imp SD10 SD23 SD03 SD06''' + bcolors.ENDC + '''
-After launching imp you are able to set the location,
-scene, shoot day, rig and the target volume.
-
-imp can also be run using the -lsvol mode:''' + bcolors.OKGREEN + '''
-imp -lsvol''' + bcolors.ENDC + '''
-which will list all drives as they are connected to your
-machine. This can be helpful when setting up custom camera
-orders.
-
-It is reccomended you install htop:''' + bcolors.OKGREEN + '''
-brew install htop''' + bcolors.ENDC + '''
-to monitor your machine whilst running imp.
-If anything looks hinky, hit cmd-Q!
-
-My workflow for imp in iTerm2 uses a window arrangement
-like this:
-+-----+------------+
-|     | imp -lsvol |
-+ imp +------------+
-|     |    htop    |
-+-----+------------+
-        '''
+        print help_string
         exit()
     if sys.argv[1] == '-lsvol':
         list_vols = os.listdir('/Volumes')
@@ -530,5 +527,5 @@ like this:
 else:
     camera_order = None
 
-my_project = Project(volume_path, camera_schema, camera_order)
+my_project = Project(volume_path, camera_schema, help_string, camera_order)
 my_project.curses_main()
