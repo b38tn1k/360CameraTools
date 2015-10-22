@@ -1,0 +1,54 @@
+#!/usr/bin/env python
+ # -*- coding: latin -*-
+import os
+import time
+import subprocess
+import sys
+
+FNAME = 0
+CAMERA = 1
+VIDEO = 2
+PART = 3
+
+def get_numbers(vname, fname):
+    if vname in fname:
+        read_complete = False
+        i = fname.index(vname)+len(vname)
+        str_number = ''
+        while not read_complete:
+            if not fname[i].isdigit():
+                read_complete = True
+            if not read_complete:
+                str_number = str_number + fname[i]
+                i += 1
+        return int(str_number)
+
+def categorize_from_fname(fname):
+    camera = get_numbers('CAM', fname)
+    video = get_numbers('VID', fname)
+    part = get_numbers('PRT', fname)
+    video_info = [fname, camera, video, part]
+    return video_info
+
+
+if len(sys.argv) > 1:
+    project_root = sys.argv[1]
+else:
+    exit()
+videos = []
+for _file in os.listdir(project_root):
+    if '.MP4' in _file:
+        info = categorize_from_fname(_file)
+        videos.append(info)
+rig = []
+new_cam = []
+cam_latch = 1
+for video in videos:
+    if cam_latch != video[CAMERA]:
+        rig.append(new_cam)
+        new_cam = [video]
+        cam_latch = video[CAMERA]
+        print 'NEW CAMERA'
+    else:
+        new_cam.append(video)
+    print video[FNAME]

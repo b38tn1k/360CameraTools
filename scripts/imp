@@ -27,47 +27,6 @@ class bcolors:
     BOLD = '\033[1m'
     UNDERLINE = '\033[4m'
 
-help_string = bcolors.HEADER + '''      ██╗███╗   ███╗██████╗
-██║████╗ ████║██╔══██╗
-██║██╔████╔██║██████╔╝
-██║██║╚██╔╝██║██╔═══╝
-██║██║ ╚═╝ ██║██║
-╚═╝╚═╝     ╚═╝╚═╝
-360 Camera Data Management Tool
-''' + bcolors.ENDC
-print '''imp has been tested on OSX and requires ffmpeg.
-
-imp allows you to import videos from multiple SD cards
-using a multicard reader. Running in default mode will
-use the name of the card to determine the position of
-the camera within the camera array - the first card
-in alphanumeric order will be Camera 1 and so on.
-
-To customise camera order, input the card names in their
-array order eg. ''' + bcolors.OKGREEN + '''imp SD10 SD23 SD03 SD06''' + bcolors.ENDC + '''
-After launching imp you are able to set the location,
-scene, shoot day, rig and the target volume.
-
-imp can also be run using the -lsvol mode:''' + bcolors.OKGREEN + '''
-imp -lsvol''' + bcolors.ENDC + '''
-which will list all drives as they are connected to your
-machine. This can be helpful when setting up custom camera
-orders.
-
-It is reccomended you install htop:''' + bcolors.OKGREEN + '''
-brew install htop''' + bcolors.ENDC + '''
-to monitor your machine whilst running imp.
-If anything looks hinky, hit cmd-Q!
-
-My workflow for imp in iTerm2 uses a window arrangement
-like this:
-+-----+------------+
-|     | imp -lsvol |
-+ imp +------------+
-|     |    htop    |
-+-----+------------+
-'''
-
 class VideoFile(object):
     def __init__(self, parent, name, camera_schema, path, day, location, scene, rig, camera_number, video_format='MP4'):
         self.FFMPEG_BIN = "ffmpeg"
@@ -520,7 +479,46 @@ camera_order = None
 
 if len(sys.argv) > 1:
     if sys.argv[1] == '-h':
-        print help_string
+        print bcolors.HEADER + '''       ██╗███╗   ███╗██████╗
+       ██║████╗ ████║██╔══██╗
+       ██║██╔████╔██║██████╔╝
+       ██║██║╚██╔╝██║██╔═══╝
+       ██║██║ ╚═╝ ██║██║
+       ╚═╝╚═╝     ╚═╝╚═╝
+360 Camera Data Management Tool
+        ''' + bcolors.ENDC
+        print '''imp has been tested on OSX and requires ffmpeg.
+
+imp allows you to import videos from multiple SD cards
+using a multicard reader. Running in default mode will
+use the name of the card to determine the position of
+the camera within the camera array - the first card
+in alphanumeric order will be Camera 1 and so on.
+
+To customise camera order, input the card names in their
+array order eg. ''' + bcolors.OKGREEN + '''imp SD10 SD23 SD03 SD06''' + bcolors.ENDC + '''
+After launching imp you are able to set the location,
+scene, shoot day, rig and the target volume.
+
+imp can also be run using the -lsvol mode:''' + bcolors.OKGREEN + '''
+imp -lsvol''' + bcolors.ENDC + '''
+which will list all drives as they are connected to your
+machine. This can be helpful when setting up custom camera
+orders.
+
+It is reccomended you install htop:''' + bcolors.OKGREEN + '''
+brew install htop''' + bcolors.ENDC + '''
+to monitor your machine whilst running imp.
+If anything looks hinky, hit cmd-Q!
+
+My workflow for imp in iTerm2 uses a window arrangement
+like this:
++-----+------------+
+|     | imp -lsvol |
++ imp +------------+
+|     |    htop    |
++-----+------------+
+        '''
         exit()
     if sys.argv[1] == '-lsvol':
         list_vols = os.listdir('/Volumes')
