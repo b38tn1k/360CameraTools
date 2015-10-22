@@ -294,16 +294,26 @@ class Project(object):
             self.screen.refresh()
             user_input = self.screen.getch()
             if user_input == ord('c'):  # Copy
-                self.create_project_workspace()
-                self.set_camera_numbers()
-                for volume in self.volumes:
-                    volume.normalise_video_numbers()
-                    self.info.append(volume.get_info())
-                self.create_project_workspace()
-                self.copy()
-                self.make_csv()
-                self.screen.addstr(self.dims[0]-self.border-10, self.border, "COPY COMPLETE!\t\t\t\t", curses.color_pair(4))
-                self.screen.addstr(self.dims[0]-self.border-9, self.border, "\t\t\t\t\t\t\t\t")
+                self.screen.addstr(self.dims[0]-self.border-10, self.border, "PRESS 'c' again to confirm", curses.color_pair(4))
+                confirm_copy = self.screen.getch()
+                if confirm_copy == ord('c'):
+                    self.create_project_workspace()
+                    self.set_camera_numbers()
+                    for volume in self.volumes:
+                        for video in volume.videos:
+                            video.day = self.day
+                            video.scene = self.scene
+                            video.location = self.location
+                    for volume in self.volumes:
+                        volume.normalise_video_numbers()
+                        self.info.append(volume.get_info())
+                    self.create_project_workspace()
+                    self.copy()
+                    self.make_csv()
+                    self.screen.addstr(self.dims[0]-self.border-10, self.border, "COPY COMPLETE!\t\t\t\t", curses.color_pair(4))
+                    self.screen.addstr(self.dims[0]-self.border-9, self.border, "\t\t\t\t\t\t\t\t")
+                else:
+                    user_input = ''
             if user_input == ord('h'):  # Help
                 self.screen.clear()
                 self.screen.addstr(0, self.border, 'HELP:')
@@ -482,7 +492,7 @@ class Project(object):
                                 self.draw_infos()
                                 self.draw_console()
                                 self.screen.refresh()
-                        while(activeCount() > 1):
+                        while(activeCount() > 2):
                                 time.sleep(1)
                                 self.screen.addstr(self.dims[0]-self.border-10, self.border, "Waiting for active copy threads to finish:", curses.color_pair(self.priority_messages))
                                 self.screen.addstr(self.dims[0]-self.border-9, self.border, "{} active threads, it has been {} seconds".format(activeCount(), int(time.time()-start_time)), curses.color_pair(self.priority_messages))
