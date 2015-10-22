@@ -192,9 +192,8 @@ class Volume(object):
         return self.info
 
 class Project(object):
-    def __init__(self, volume_path, camera_schema, help_string, camera_order=None):
+    def __init__(self, volume_path, camera_schema, camera_order=None):
         self.volumes = []
-        self.help_string = help_string
         self.volume_path = volume_path
         self.camera_schema = camera_schema
         self.camera_order = camera_order
@@ -535,5 +534,5 @@ like this:
 else:
     camera_order = None
 
-my_project = Project(volume_path, camera_schema, help_string, camera_order)
+my_project = Project(volume_path, camera_schema, camera_order)
 my_project.curses_main()
