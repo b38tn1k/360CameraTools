@@ -450,7 +450,7 @@ class Project(object):
                                 self.draw_infos()
                                 self.draw_console()
                                 self.screen.refresh()
-                        while(activeCount() > 2):
+                        while(activeCount() > 1):
                                 time.sleep(1)
                                 self.screen.addstr(self.dims[0]-self.border-10, self.border, "Waiting for active copy threads to finish:", curses.color_pair(self.priority_messages))
                                 self.screen.addstr(self.dims[0]-self.border-9, self.border, "{} active threads, it has been {} seconds".format(activeCount(), int(time.time()-start_time)), curses.color_pair(self.priority_messages))
