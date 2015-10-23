@@ -23,11 +23,11 @@ def get_numbers(vname, fname):
                 i += 1
         return int(str_number)
 
-def categorize_from_fname(fname):
+def categorize_from_fname(fname, project_root):
     camera = get_numbers('CAM', fname)
     video = get_numbers('VID', fname)
     part = get_numbers('PRT', fname)
-    video_info = [fname, camera, video, part]
+    video_info = [project_root + '/' + fname.upper(), camera, video, part]
     return video_info
 
 
@@ -38,7 +38,7 @@ else:
 videos = []
 for _file in os.listdir(project_root):
     if '.MP4' in _file:
-        info = categorize_from_fname(_file)
+        info = categorize_from_fname(_file, project_root)
         videos.append(info)
 rig = []
 new_cam = []
@@ -48,7 +48,27 @@ for video in videos:
         rig.append(new_cam)
         new_cam = [video]
         cam_latch = video[CAMERA]
-        print 'NEW CAMERA'
     else:
         new_cam.append(video)
-    print video[FNAME]
+
+# Make .ts maker Script
+for video in videos:
+    if '.MP4' in video[FNAME].upper():
+        command = ('ffmpeg -i {!s}.MP4 -c copy -bsf:v h264_mp4toannexb -f mpegts {!s}.ts'.format(video[FNAME][:-4], video[FNAME][:-4]))
+        # print command
+        os.system(command)
+        time.sleep(10)
+commands = []
+i = 1
+for camera in rig:
+    input_string = ''
+    output_string = 'Camera_{}'.format(i)
+    for video in camera:
+        input_string = input_string + ' ' + video[FNAME][:-4] + '.ts'
+    command = 'ffmpeg -i "concat:{!s}" -c copy -bsf:a aac_adtstoasc {}concat/{!s}.mp4'.format(input_string, project_root, output_string)
+    i += 1
+    os.system(command)
+    time.sleep(10)
+    # print command
+    # print 'NEW CAMERA'
+os.system('rm *.ts')

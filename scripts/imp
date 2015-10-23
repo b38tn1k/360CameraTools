@@ -83,11 +83,24 @@ class VideoFile(object):
         index = self.infos.find(' [SAR')
         self.resolution = self.infos[index-len('1920x1440'):index]
 
-    def get_absolute_duration(self):
-        hours = float(self.duration[:2])
-        minutes = float(self.duration[3:5])
-        seconds = float(self.duration[6:])
-        self.absolute_duration = 60*60*hours + 60*minutes + seconds
+    def get_absolute_duration(self): 
+        error = False
+        if self.duration[:2].isdigit():
+            hours = float(self.duration[:2])
+        else:
+            error = True
+        if self.duration[3:5].isdigit():
+            minutes = float(self.duration[3:5])
+        else:
+            error = True
+        if self.duration[6:].isdigit():
+            seconds = float(self.duration[6:])
+        else:
+            error = True
+        if error:
+            self.absolute_duration = 'Error Reading'
+        else:
+            self.absolute_duration = 60*60*hours + 60*minutes + seconds
 
     def get_info(self, verbose=True):
         verbose = False #HACK
