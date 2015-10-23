@@ -51,24 +51,28 @@ for video in videos:
     else:
         new_cam.append(video)
 
+print 'make ts\n'
 # Make .ts maker Script
 for video in videos:
     if '.MP4' in video[FNAME].upper():
         command = ('ffmpeg -i {!s}.MP4 -c copy -bsf:v h264_mp4toannexb -f mpegts {!s}.ts'.format(video[FNAME][:-4], video[FNAME][:-4]))
-        # print command
-        os.system(command)
-        time.sleep(10)
+        # os.system(command)
+        # time.sleep(10)
 commands = []
-i = 1
-for camera in rig:
-    input_string = ''
-    output_string = 'Camera_{}'.format(i)
-    for video in camera:
-        input_string = input_string + ' ' + video[FNAME][:-4] + '.ts'
-    command = 'ffmpeg -i "concat:{!s}" -c copy -bsf:a aac_adtstoasc {}concat/{!s}.mp4'.format(input_string, project_root, output_string)
-    i += 1
-    os.system(command)
+i = 999999999
+print '\nmake concat\n'
+if not os.path.isdir(os.path.join(project_root, 'concat')):
+    os.mkdir(os.path.join(project_root, 'concat'))
+    os.system('touch {}/.hi'.format(os.path.join(project_root, 'concat')))
     time.sleep(10)
-    # print command
-    # print 'NEW CAMERA'
-os.system('rm *.ts')
+input_string = ''
+for camera in rig:
+    for video in camera:
+        input_string = input_string + video[FNAME][:-4] + '.ts|'
+        i = video[CAMERA]
+    output_string = 'Camera_{}'.format(i)
+    command = 'ffmpeg -i "concat:{!s}" -c copy -bsf:a aac_adtstoasc {}/{!s}.mp4'.format(input_string[:-1], os.path.join(project_root, 'concat'), output_string)
+    # os.system(command)
+    input_string = ''
+    # time.sleep(10)
+    print command + '\n'
