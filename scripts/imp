@@ -83,7 +83,7 @@ class VideoFile(object):
         index = self.infos.find(' [SAR')
         self.resolution = self.infos[index-len('1920x1440'):index]
 
-    def get_absolute_duration(self): 
+    def get_absolute_duration(self):
         error = False
         if self.duration[:2].isdigit():
             hours = float(self.duration[:2])
@@ -499,6 +499,12 @@ if len(sys.argv) > 1:
 360 Camera Data Management Tool
         ''' + bcolors.ENDC
         print '''imp has been tested on OSX and requires ffmpeg.
+Usage:
+
+imp [SD Card Names]
+imp -lsvol
+imp -h
+
 
 imp allows you to import videos from multiple SD cards
 using a multicard reader. Running in default mode will
