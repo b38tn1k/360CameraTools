@@ -10,7 +10,12 @@ Add imp to your .bashrc eg:
 
     alias imp="cd /path-to-the-imp && ./imp"
 It has to be done this way unless you want to move the config file to your root... it looks dumb but it works.
-### Pluraleyes to Final Cut Pro to CSV
+###Lazy Concat Script
+Currently I am just dropping the concat script into my bin and running:
+
+    concat .
+whilst in the directory containing the files I wish to concatenate.
+###Pluraleyes to Final Cut Pro to CSV
 Create a new Service in automator. Then copy and paste the code from lmx into a Run Shell Script module. Change the shell to usr/bin/python and the Pass Input field to 'as arguments'. Save it as something (lmx) and then when you right click on a .xml file generated in the PROJECTS directory and click services/lmx. This will result in a csv of the frame offset being made in the PROJECTS directory that you can use to sync videos in VideoStitch or AutoPano. AutoPano uses the inverted frame offsets, idk what VideoStitch uses. An example workflow is provided.
 ## How to use...
 To import video files from the cards:
