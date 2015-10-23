@@ -50,20 +50,24 @@ for video in videos:
         cam_latch = video[CAMERA]
     else:
         new_cam.append(video)
+rig.append(new_cam)
 
-print 'make ts\n'
+# for camera in rig:
+#     for video in camera:
+#         print video
+
 # Make .ts maker Script
 for video in videos:
     if '.MP4' in video[FNAME].upper():
         command = ('ffmpeg -i {!s}.MP4 -c copy -bsf:v h264_mp4toannexb -f mpegts {!s}.ts'.format(video[FNAME][:-4], video[FNAME][:-4]))
-        # os.system(command)
-        # time.sleep(10)
+        os.system(command)
+        time.sleep(10)
 commands = []
 i = 999999999
-print '\nmake concat\n'
+
 if not os.path.isdir(os.path.join(project_root, 'concat')):
     os.mkdir(os.path.join(project_root, 'concat'))
-    os.system('touch {}/.hi'.format(os.path.join(project_root, 'concat')))
+    os.system('touch {}/.hi'.format(os.path.join(project_root, 'concat'))) #just to be sure
     time.sleep(10)
 input_string = ''
 for camera in rig:
@@ -72,7 +76,6 @@ for camera in rig:
         i = video[CAMERA]
     output_string = 'Camera_{}'.format(i)
     command = 'ffmpeg -i "concat:{!s}" -c copy -bsf:a aac_adtstoasc {}/{!s}.mp4'.format(input_string[:-1], os.path.join(project_root, 'concat'), output_string)
-    # os.system(command)
+    os.system(command)
     input_string = ''
-    # time.sleep(10)
-    print command + '\n'
+    time.sleep(10)
