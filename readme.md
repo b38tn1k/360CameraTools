@@ -9,7 +9,7 @@ Data management scripts for 360 Cameras
 Add imp to your .bashrc eg:
 
     alias imp="cd /path-to-the-imp && ./imp"
-It has to be done this way unless you want to move the config file to your root... it looks dumb but it works.
+It has to be done this way unless you want to move the config file to your bin... it looks dumb but it works.
 ###Lazy Concat Script
 Currently I am just dropping the concat script into my /usr/local/bin and running:
 
