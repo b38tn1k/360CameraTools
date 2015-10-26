@@ -215,6 +215,7 @@ class Project(object):
         self.video_count = 0
         self.border = 2
         self.copied_videos = 0
+        self.approx_wait = 0
 
     def command_line_main(self):
         self.command_line_mode()
@@ -454,21 +455,23 @@ class Project(object):
                         self.draw_console
                         while(activeCount() >= 25): # SLOW IT DOWN HERE
                                 time.sleep(1)
-                                self.screen.addstr(self.dims[0]-self.border-10, self.border, "Waiting for active copy threads to finish:", curses.color_pair(self.priority_messages))
-                                self.screen.addstr(self.dims[0]-self.border-9, self.border, "{} active threads, it has been {} seconds".format(activeCount(), int(time.time()-start_time)), curses.color_pair(self.priority_messages))
                                 self.copied_videos = 0
                                 for _volume in self.volumes:
                                     self.copied_videos += _volume.copied_videos # this update method can be improved (maybe add a parent to the volume class? self.parent.parent.copied_videos += 1 lol)
+                                self.approx_wait = int((((time.time()-start_time)) / self.copied_videos) * (self.video_count - self.copied_videos))
+                                self.screen.addstr(self.dims[0]-self.border-10, self.border, "Waiting for active copy threads to finish:", curses.color_pair(self.priority_messages))
+                                self.screen.addstr(self.dims[0]-self.border-9, self.border, "{} active threads, it has been {} seconds, approx {} seconds to go".format(activeCount(), int(time.time()-start_time), self.approx_wait), curses.color_pair(self.priority_messages))
                                 self.draw_infos()
                                 self.draw_console()
                                 self.screen.refresh()
                         while(activeCount() > 1):
                                 time.sleep(1)
-                                self.screen.addstr(self.dims[0]-self.border-10, self.border, "Waiting for active copy threads to finish:", curses.color_pair(self.priority_messages))
-                                self.screen.addstr(self.dims[0]-self.border-9, self.border, "{} active threads, it has been {} seconds".format(activeCount(), int(time.time()-start_time)), curses.color_pair(self.priority_messages))
                                 self.copied_videos = 0
                                 for _volume in self.volumes:
                                     self.copied_videos += _volume.copied_videos
+                                self.approx_wait = int((((time.time()-start_time)) / self.copied_videos) * (self.video_count - self.copied_videos))
+                                self.screen.addstr(self.dims[0]-self.border-10, self.border, "Waiting for active copy threads to finish:", curses.color_pair(self.priority_messages))
+                                self.screen.addstr(self.dims[0]-self.border-9, self.border, "{} active threads, it has been {} seconds, approx {} seconds to go".format(activeCount(), int(time.time()-start_time), self.approx_wait), curses.color_pair(self.priority_messages))
                                 self.draw_infos()
                                 self.draw_console()
                                 self.screen.refresh()
