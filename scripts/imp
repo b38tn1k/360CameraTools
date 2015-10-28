@@ -343,19 +343,19 @@ class Project(Tkinter.Tk):
                 cursor -= 1
                 if cursor == -1:
                     cursor+=5
-            if user_input == ord('J'):  # self.camera_cursor Up
+            if user_input == ord('J'):
                 self.camera_cursor += 1
-                if self.camera_cursor == self.camera_count:
+                if self.camera_cursor == len(self.volumes):
                       self.camera_cursor = 0
-            if user_input == ord('K'):  # self.camera_cursor Down
+            if user_input == ord('K'):
                 self.camera_cursor -= 1
                 if self.camera_cursor == -1:
-                    self.camera_cursor = self.camera_count-1
+                    self.camera_cursor = len(self.volumes)-1
             if user_input == ord('I'):
                 curses.echo()
                 for n, volume in enumerate(self.volumes):
                     if volume.is_card:
-                        if n == self.camera_cursor:
+                        if n == self.camera_cursor and volume.is_card:
                             prior_string = 'Camera\t{}\t\t'.format(volume.name)
                             volume.camera_number = self.screen.getstr(n+self.border, self.border*10 + len(prior_string),60)
                             volume.set_camera_number(volume.camera_number)
@@ -429,12 +429,11 @@ class Project(Tkinter.Tk):
         self.screen.addstr(0, self.border, 'Volume Type: \tVolume Name:\tCamera Number:\t Video Count:\tCopied Videos:' )
         self.screen.addstr(self.dims[0]-self.border, self.border, '  [q]uit  [u]pdate  [c]opy  ed[i]t  [e]ject_all  [s]ave  [h]elp  ', curses.color_pair(self.menu_th))
         for n, volume in enumerate(self.volumes):
+            if n == self.camera_cursor:
+                self.screen.addstr(n+self.border, self.border-2, '>')
             if volume.is_card:
                 self.camera_count += 1
                 self.screen.addstr(n+self.border, self.border, 'Camera\t' + volume.name + '\t\t' + str(volume.camera_number) + '\t\t' + str(volume.video_count) + '\t\t' + str(volume.copied_videos), curses.color_pair(self.camera_th))
-                if n == self.camera_cursor:
-                    self.screen.addstr(n+self.border, self.border-2, '>')
-
             elif volume.target:
                 self.screen.addstr(n+self.border, self.border, 'Target\t' + volume.name, curses.color_pair(self.target_th))
             else:
