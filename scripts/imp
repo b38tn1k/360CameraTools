@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
  # -*- coding: latin -*-
 import sys
 import os
@@ -10,6 +10,7 @@ import hashlib
 from threading import Thread, activeCount
 import subprocess as sp
 import curses
+import Tkinter
 
 def pretty_print(alist):
     for item in alist:
@@ -163,7 +164,7 @@ class Volume(object):
 
     def find_assets(self):
         for schema in self.camera_schema[0]:
-            asset_path = os.path.join(volume_path, self.name)
+            asset_path = os.path.join(volume_path, self.name) # I cant remember why this works, which is not good
             asset_path = os.path.join(asset_path, schema)
             if os.path.isdir(asset_path):
                 self.asset_path = asset_path
@@ -203,9 +204,10 @@ class Volume(object):
                 self.info.append(video.get_info())
         return self.info
 
-class Project(object):
-    def __init__(self, volume_path, camera_schema, camera_order=None):
+class Project(Tkinter.Tk):
+    def __init__(self, volume_path, camera_schema, parent, camera_order=None):
         self.volumes = []
+        self.parent = parent
         self.volume_path = volume_path
         self.camera_schema = camera_schema
         self.camera_order = camera_order
@@ -216,6 +218,47 @@ class Project(object):
         self.border = 2
         self.copied_videos = 0
         self.approx_wait = 0
+
+    def tkinter_main(self):
+        Tkinter.Tk.__init__(self,self.parent)
+        self.initialize()
+
+    def initialize(self):
+        self.detect_volumes()
+        self.set_camera_numbers()
+        self.grid()
+        column_val = 0
+        for i, volume in enumerate(self.volumes):
+            labelVariable = Tkinter.StringVar()
+            if volume.is_card or volume.target:
+                if volume.target:
+                    label = Tkinter.Label(self,textvariable=labelVariable,anchor="w",fg="white",bg="skyblue")
+                else:
+                    label = Tkinter.Label(self,textvariable=labelVariable,anchor="w",fg="white",bg="blue")
+                label.grid(column=column_val,row=i,columnspan=2,sticky='EW')
+                labelVariable.set(volume.name)
+                self.entryVariable = Tkinter.StringVar()
+                self.entry = Tkinter.Entry(self,textvariable=self.entryVariable)
+                self.entry.grid(column=1,row=i,sticky='EW')
+                self.entry.bind("<Return>", self.OnPressEnter)
+                if volume.target:
+                    self.entryVariable.set(volume.name)
+                else:
+                    self.entryVariable.set(volume.camera_number)
+        button = Tkinter.Button(self,text="Copy Videos", command=self.OnButtonClick)
+        button.grid(column=0, row=len(self.volumes), sticky='EW')
+        self.grid_columnconfigure(0,weight=1)
+        self.resizable(True,False)
+        self.update()
+        self.geometry(self.geometry())
+        # self.entry.focus_set()
+        # self.entry.selection_range(0, Tkinter.END)
+
+    def OnButtonClick(self):
+        pass
+
+    def OnPressEnter(self, event):
+        pass
 
     def command_line_main(self):
         self.command_line_mode()
@@ -242,6 +285,7 @@ class Project(object):
         self.screen.refresh()
         self.screen.clear()
         cursor = 3
+        self.camera_cursor = 0
         bug = ['>', '', '', '', '']
         # THEME
         self.init_colors()
@@ -299,6 +343,26 @@ class Project(object):
                 cursor -= 1
                 if cursor == -1:
                     cursor+=5
+            if user_input == ord('J'):  # self.camera_cursor Up
+                self.camera_cursor += 1
+                if self.camera_cursor == self.camera_count:
+                      self.camera_cursor = 0
+            if user_input == ord('K'):  # self.camera_cursor Down
+                self.camera_cursor -= 1
+                if self.camera_cursor == -1:
+                    self.camera_cursor = self.camera_count-1
+            if user_input == ord('I'):
+                curses.echo()
+                for n, volume in enumerate(self.volumes):
+                    if volume.is_card:
+                        if n == self.camera_cursor:
+                            prior_string = 'Camera\t{}\t\t'.format(volume.name)
+                            volume.camera_number = self.screen.getstr(n+self.border, self.border*10 + len(prior_string),60)
+                            volume.set_camera_number(volume.camera_number)
+                curses.noecho()
+
+            if user_input == ord('s'):
+                self.save_config()
             if user_input == ord('u'):  # Update Project Settings
                 self.detect_volumes()
                 self.set_camera_numbers()
@@ -358,14 +422,19 @@ class Project(object):
         curses.init_pair(self.menu_th, curses.COLOR_BLACK, curses.COLOR_WHITE)
 
     def draw_infos(self):
+        self.camera_count = 0
         for volume in self.volumes:
             if volume.target:
                 self.screen.addstr(self.dims[0]-self.border-3, self.border*8, volume.name)
         self.screen.addstr(0, self.border, 'Volume Type: \tVolume Name:\tCamera Number:\t Video Count:\tCopied Videos:' )
-        self.screen.addstr(self.dims[0]-self.border, self.border, '  [q]uit  [u]pdate  [c]opy  ed[i]t  [e]ject_cameras  [h]elp  ', curses.color_pair(self.menu_th))
+        self.screen.addstr(self.dims[0]-self.border, self.border, '  [q]uit  [u]pdate  [c]opy  ed[i]t  [e]ject_all  [s]ave  [h]elp  ', curses.color_pair(self.menu_th))
         for n, volume in enumerate(self.volumes):
             if volume.is_card:
+                self.camera_count += 1
                 self.screen.addstr(n+self.border, self.border, 'Camera\t' + volume.name + '\t\t' + str(volume.camera_number) + '\t\t' + str(volume.video_count) + '\t\t' + str(volume.copied_videos), curses.color_pair(self.camera_th))
+                if n == self.camera_cursor:
+                    self.screen.addstr(n+self.border, self.border-2, '>')
+
             elif volume.target:
                 self.screen.addstr(n+self.border, self.border, 'Target\t' + volume.name, curses.color_pair(self.target_th))
             else:
@@ -487,21 +556,23 @@ class Project(object):
                         csv.write('{},{},{},{},{},{},{},{},{},{}\n'.format(video.new_name, video.camera_number, video.video_number, video.chunk_number, video.creation_time, video.duration, video.absolute_duration,  video.bitrate, video.frame_rate, video.resolution))
             csv.close()
 
-volume_path = '/Volumes/'
-camera_schema = (['DCIM/100GOPRO', 'DCIM/101GOPRO'], ['GOPR', 'GP'])
-camera_order = None
+if __name__ == "__main__":
+    volume_path = '/Volumes/'
+    camera_schema = (['DCIM/100GOPRO', 'DCIM/101GOPRO'], ['GOPR', 'GP'])
+    camera_order = None
 
-if len(sys.argv) > 1:
-    if sys.argv[1] == '-h':
-        print bcolors.HEADER + '''       ██╗███╗   ███╗██████╗
-       ██║████╗ ████║██╔══██╗
-       ██║██╔████╔██║██████╔╝
-       ██║██║╚██╔╝██║██╔═══╝
-       ██║██║ ╚═╝ ██║██║
-       ╚═╝╚═╝     ╚═╝╚═╝
-360 Camera Data Management Tool
-        ''' + bcolors.ENDC
-        print '''imp has been tested on OSX and requires ffmpeg.
+    if len(sys.argv) > 1:
+        if sys.argv[1] == '-h':
+            print bcolors.HEADER + '''           ██╗███╗   ███╗██████╗
+           ██║████╗ ████║██╔══██╗
+           ██║██╔████╔██║██████╔╝
+           ██║██║╚██╔╝██║██╔═══╝
+           ██║██║ ╚═╝ ██║██║
+           ╚═╝╚═╝     ╚═╝╚═╝
+    360 Camera Data Management Tool
+            ''' + bcolors.ENDC
+            print '''
+imp has been tested on OSX and requires ffmpeg.
 Usage:
 
 imp [SD Card Names]
@@ -538,22 +609,25 @@ like this:
 + imp +------------+
 |     |    htop    |
 +-----+------------+
-        '''
-        exit()
-    if sys.argv[1] == '-lsvol':
-        list_vols = os.listdir('/Volumes')
-        number_of_volumes = len(list_vols)
-        pretty_print(list_vols)
-        while True:
-            for volume in list_vols:
-                list_vols = os.listdir('/Volumes')
-                if number_of_volumes != len(list_vols):
-                    pretty_print(list_vols)
-                    number_of_volumes = len(list_vols)
+            '''
+            exit()
+        if sys.argv[1] == '-lsvol':
+            list_vols = os.listdir('/Volumes')
+            number_of_volumes = len(list_vols)
+            pretty_print(list_vols)
+            while True:
+                for volume in list_vols:
+                    list_vols = os.listdir('/Volumes')
+                    if number_of_volumes != len(list_vols):
+                        pretty_print(list_vols)
+                        number_of_volumes = len(list_vols)
 
-    camera_order = sys.argv[1:]
-else:
-    camera_order = None
+        camera_order = sys.argv[1:]
+    else:
+        camera_order = None
 
-my_project = Project(volume_path, camera_schema, camera_order)
-my_project.curses_main()
+    my_project = Project(volume_path, camera_schema, None, camera_order)
+    my_project.curses_main()
+    # my_project.tkinter_main()
+    # my_project.title('Too Many Cameras')
+    # my_project.mainloop()
