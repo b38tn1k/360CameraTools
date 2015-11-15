@@ -10,7 +10,7 @@ import hashlib
 from threading import Thread, activeCount
 import subprocess as sp
 import curses
-import Tkinter
+# import Tkinter
 
 def pretty_print(alist):
     for item in alist:
@@ -204,7 +204,7 @@ class Volume(object):
                 self.info.append(video.get_info())
         return self.info
 
-class Project(Tkinter.Tk):
+class Project(object):
     def __init__(self, volume_path, camera_schema, parent, camera_order=None):
         self.volumes = []
         self.parent = parent
@@ -218,47 +218,6 @@ class Project(Tkinter.Tk):
         self.border = 2
         self.copied_videos = 0
         self.approx_wait = 0
-
-    def tkinter_main(self):
-        Tkinter.Tk.__init__(self,self.parent)
-        self.initialize()
-
-    def initialize(self):
-        self.detect_volumes()
-        self.set_camera_numbers()
-        self.grid()
-        column_val = 0
-        for i, volume in enumerate(self.volumes):
-            labelVariable = Tkinter.StringVar()
-            if volume.is_card or volume.target:
-                if volume.target:
-                    label = Tkinter.Label(self,textvariable=labelVariable,anchor="w",fg="white",bg="skyblue")
-                else:
-                    label = Tkinter.Label(self,textvariable=labelVariable,anchor="w",fg="white",bg="blue")
-                label.grid(column=column_val,row=i,columnspan=2,sticky='EW')
-                labelVariable.set(volume.name)
-                self.entryVariable = Tkinter.StringVar()
-                self.entry = Tkinter.Entry(self,textvariable=self.entryVariable)
-                self.entry.grid(column=1,row=i,sticky='EW')
-                self.entry.bind("<Return>", self.OnPressEnter)
-                if volume.target:
-                    self.entryVariable.set(volume.name)
-                else:
-                    self.entryVariable.set(volume.camera_number)
-        button = Tkinter.Button(self,text="Copy Videos", command=self.OnButtonClick)
-        button.grid(column=0, row=len(self.volumes), sticky='EW')
-        self.grid_columnconfigure(0,weight=1)
-        self.resizable(True,False)
-        self.update()
-        self.geometry(self.geometry())
-        # self.entry.focus_set()
-        # self.entry.selection_range(0, Tkinter.END)
-
-    def OnButtonClick(self):
-        pass
-
-    def OnPressEnter(self, event):
-        pass
 
     def command_line_main(self):
         self.command_line_mode()
