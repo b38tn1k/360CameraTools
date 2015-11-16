@@ -164,7 +164,7 @@ class Volume(object):
 
     def find_assets(self):
         for schema in self.camera_schema[0]:
-            asset_path = os.path.join(volume_path, self.name) # I cant remember why this works, which is not good
+            asset_path = os.path.join(volume_path, self.name)
             asset_path = os.path.join(asset_path, schema)
             if os.path.isdir(asset_path):
                 self.asset_path = asset_path
@@ -496,10 +496,10 @@ class Project(object):
                                 self.copied_videos = 0
                                 for _volume in self.volumes:
                                     self.copied_videos += _volume.copied_videos
-                                if self.copied_videos != 0 or self.copied_videos != self.video_count:
-                                    self.approx_wait = int((((time.time()-start_time)) / self.copied_videos) * (self.video_count - self.copied_videos))
-                                else:
+                                if self.copied_videos == 0:
                                     self.approx_wait = 0
+                                else:
+                                    self.approx_wait = int((((time.time()-start_time)) / self.copied_videos) * (self.video_count - self.copied_videos))
                                 self.screen.addstr(self.dims[0]-self.border-10, self.border, "Waiting for active copy threads to finish:", curses.color_pair(self.priority_messages))
                                 self.screen.addstr(self.dims[0]-self.border-9, self.border, "{} active threads, it has been {} seconds, approx {} seconds to go".format(activeCount(), int(time.time()-start_time), self.approx_wait), curses.color_pair(self.priority_messages))
                                 self.draw_infos()
