@@ -10,7 +10,6 @@ import hashlib
 from threading import Thread, activeCount
 import subprocess as sp
 import curses
-# import Tkinter
 
 def pretty_print(alist):
     for item in alist:
@@ -153,7 +152,7 @@ class Volume(object):
         self.is_card = False
         self.video_count = 0
         self.copied_videos = 0
-        if name == 'TA_VR_M2' or name == 'TA_VR_M1' or 'Master' in name: #HACK
+        if name.upper() == 'TA_VR_M2' or name == 'TA_VR_M1' or 'Master' in name:   # HACK
             self.target = True
         else:
             self.target = False
@@ -480,7 +479,7 @@ class Project(object):
                             self.copied_videos += _volume.copied_videos
                         self.draw_infos()
                         self.draw_console
-                        while(activeCount() >= 25): # SLOW IT DOWN HERE
+                        while(activeCount() >= 25):  # SLOW IT DOWN HERE
                                 time.sleep(1)
                                 self.copied_videos = 0
                                 for _volume in self.volumes:
