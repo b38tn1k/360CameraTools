@@ -120,13 +120,9 @@ class VideoFile(object):
     def copy(self, target):
         if self.is_video_file:
             # print self.new_name + ' Begin'
-            #checksum = self.md5(self.absolute_path)
-            checksum = os.path.getsize(self.absolute_path)
-            shutil.copyfile(self.absolute_path, os.path.join(target, self.new_name))
-            #with open(self.absolute_path, 'r') as src, open(os.path.join(target, self.new_name), 'w') as dst:
-            #    shutil.copyfileobj(src, dst, 1024)
-            #checksum2 = self.md5(os.path.join(target, self.new_name))
-            checksum2 = os.path.getsize(os.path.join(target, self.new_name))
+            checksum = self.md5(self.absolute_path)
+            # shutil.copyfile(self.absolute_path, os.path.join(target, self.new_name))
+            checksum2 = self.md5(os.path.join(target, self.new_name))
             # print self.new_name + ' Complete'
             if checksum2 != checksum:
                 print '\033[91m'+"\nError Copying {} to {}\n".format(file_object.path, target)+'\033[0m'
@@ -470,41 +466,28 @@ class Project(object):
         start_time = time.time()
         total_byte_length = 1 #Fix divide by 0 error
         copied_byte_length = 0
-        allowed_alive = 1
-        idle_threads = []
-        active_threads = []
         for volume in self.volumes:
             volume.idle_copy_threads = []
             for video in volume.videos:
-                copy_object = [{'thread':Thread(target=video.copy, args = [self.target]), 'video':video, 'size':os.path.getsize(video.absolute_path)}]
-                volume.idle_copy_threads += copy_object
-                idle_threads += copy_object
+                volume.idle_copy_threads += [{'thread':Thread(target=video.copy, args= [self.target]), 'video':video, 'size':os.path.getsize(video.absolute_path)}]
                 videos_total += 1
                 total_byte_length += os.path.getsize(video.absolute_path)
             if len(volume.idle_copy_threads):
                 volume.active_copy_thread = volume.idle_copy_threads[0]
                 volume.active_copy_thread['thread'].start()
                 volume.idle_copy_threads.remove(volume.idle_copy_threads[0])
-                pass
-        #self.volumes[1].active_copy_thread = self.volumes[1].idle_copy_threads[0]
-        #self.volumes[1].active_copy_thread['thread'].start()
 
         while self.video_count != self.copied_videos:
 
             for volume in self.volumes:
-                if hasattr(volume, "active_copy_thread") and not volume.active_copy_thread == None:
-
-                    if not volume.active_copy_thread['thread'].is_alive():
-                        volume.copied_videos += 1
-                        videos_copied += 1
-                        self.copied_videos += 1
-                        copied_byte_length += volume.active_copy_thread['size']
-                        volume.active_copy_thread = None
-                        if len(volume.idle_copy_threads):
-                            volume.active_copy_thread = volume.idle_copy_threads[0]
-                            volume.active_copy_thread['thread'].start()
-                            volume.idle_copy_threads.remove(volume.idle_copy_threads[0])
-                            pass
+                if not volume.active_copy_thread['thread'].is_alive():
+                    volume.copied_videos += 1
+                    videos_copied += 1
+                    copied_byte_length += volume.active_copy_thread['size']
+                    if len(volume.idle_copy_threads):
+                        volume.active_copy_thread = volume.idle_copy_threads[0]
+                        volume.active_copy_thread['thread'].start()
+                        volume.idle_copy_threads.remove(volume.idle_copy_threads[0])
 
             self.draw_infos()
             self.draw_console
