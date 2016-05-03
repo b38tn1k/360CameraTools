@@ -2,7 +2,7 @@
 Data management scripts for 360 Cameras.
 ##Requirements
 
-    brew install ffmpeg --with-fdk-aac --with-ffplay --with-freetype --with-frei0r --with-libass --with-libvo-aacenc --with-libvorbis --with-libvpx --with-opencore-amr --with-openjpeg --with-opus --with-rtmpdump --with-schroedinger --with-speex --with-theora --with-tools && echo 360 Camera Tools currently requires the Master Hard Drive to be named 'Master'. This easy to change but is safest as a hardcoded string. If you have Volumes automatically mounting and unmounting on your computer (look out for 'backup volumes') things can get weird.
+    brew install ffmpeg --with-fdk-aac --with-ffplay --with-freetype --with-frei0r --with-libass --with-libvo-aacenc --with-libvorbis --with-libvpx --with-opencore-amr --with-openjpeg --with-opus --with-rtmpdump --with-schroedinger --with-speex --with-theora --with-tools && echo 360 Camera Tools currently requires the Master Hard Drive to be named 'Master'. This easy to change but is safest as a hardcoded string. If you have Volumes automatically mounting and unmounting on your computer (look out for 'backup volumes') things can get wierd.
 
 ##How to setup...
 ###SD Importer Script
